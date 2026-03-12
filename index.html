@@ -1,402 +1,753 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zombie City Shooter</title>
-    <style>
-        body { margin: 0; overflow: hidden; font-family: Arial; background: #000; color: white; }
-        #ui { position: absolute; top: 10px; left: 10px; z-index: 100; }
-        #health { font-size: 24px; color: lime; }
-        #score { font-size: 20px; }
-        #crosshair { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 20px; height: 20px; border: 2px solid red; border-radius: 50%; z-index: 100; pointer-events: none; display: none; }
-        #leaderboard { position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.8); padding: 10px; max-height: 300px; overflow-y: auto; border-radius: 5px; }
-        #instructions { position: absolute; bottom: 10px; left: 10px; font-size: 14px; opacity: 0.8; }
-    </style>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128/examples/js/controls/PointerLockControls.js"></script>
+<meta charset="UTF-8">
+<title>Zombie City Shooter</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { overflow:hidden; background:#000; color:#fff; font-family:Arial; }
+canvas { display:block; }
+#overlay {
+    position:fixed; top:0; left:0; width:100%; height:100%;
+    background:rgba(0,0,0,0.85);
+    display:flex; flex-direction:column;
+    align-items:center; justify-content:center;
+    z-index:999; cursor:pointer;
+}
+#overlay h1 { font-size:48px; color:#f00; margin-bottom:20px; }
+#overlay p { font-size:20px; margin:5px; }
+#overlay button {
+    margin-top:20px; padding:15px 40px; font-size:22px;
+    background:#f00; color:#fff; border:none; border-radius:8px; cursor:pointer;
+}
+#hud {
+    position:fixed; top:0; left:0; width:100%; padding:10px;
+    display:none; pointer-events:none; z-index:100;
+}
+#healthbar-bg {
+    width:200px; height:20px; background:#333; border-radius:5px;
+}
+#healthbar {
+    height:20px; width:100%; background:lime; border-radius:5px;
+    transition:width 0.1s, background 0.1s;
+}
+#stats { font-size:18px; margin-top:5px; }
+#wave-alert {
+    position:fixed; top:50%; left:50%;
+    transform:translate(-50%,-50%);
+    font-size:40px; font-weight:bold; color:yellow;
+    display:none; pointer-events:none; z-index:200;
+    text-shadow:2px 2px 8px #000;
+}
+#crosshair {
+    position:fixed; top:50%; left:50%;
+    transform:translate(-50%,-50%);
+    pointer-events:none; z-index:100; display:none;
+}
+#crosshair::before, #crosshair::after {
+    content:''; position:absolute; background:red;
+}
+#crosshair::before { width:2px; height:20px; top:-10px; left:-1px; }
+#crosshair::after  { width:20px; height:2px; left:-10px; top:-1px; }
+#leaderboard {
+    position:fixed; top:10px; right:10px;
+    background:rgba(0,0,0,0.85); padding:12px;
+    border-radius:8px; font-size:14px; display:none;
+    min-width:180px; z-index:100;
+}
+#leaderboard h3 { margin-bottom:8px; color:gold; }
+#powerup-msg {
+    position:fixed; bottom:60px; left:50%;
+    transform:translateX(-50%);
+    font-size:22px; font-weight:bold; display:none;
+    pointer-events:none; z-index:100; text-shadow:2px 2px 8px #000;
+}
+#controls-hint {
+    position:fixed; bottom:10px; left:10px;
+    font-size:13px; opacity:0.7; display:none; z-index:100;
+}
+#parry-msg {
+    position:fixed; bottom:100px; left:50%;
+    transform:translateX(-50%);
+    font-size:28px; color:#00ffff; font-weight:bold;
+    display:none; pointer-events:none; z-index:100;
+}
+</style>
 </head>
 <body>
-    <div id="ui">
-        <div id="health">Vie: 100%</div>
-        <div id="score">Zombies: 0 | Wins: 0 | Wave: 1</div>
-    </div>
-    <div id="crosshair"></div>
-    <div id="leaderboard">
-        <h3>🏆 Top 10</h3>
-        <ul id="lb-list"></ul>
-    </div>
-    <div id="instructions">
-        WASD: Bouger | Clic: Tir | F: Parry | Souris: Regard
-    </div>
 
-    <script>
-        // === CONFIG JSONBIN (REMPLACE) ===
-        const BIN_ID = '69b31e14c3097a1dd51dbe5e';  // Ex: yabc123def456
-        const SECRET_KEY = '$2a$10$Lggm2f3BBHSU5Bfsn.0nwezYN0OXADYm8yZ1/7ZrY7PWKoa0nwAOC';  // De jsonbin.io
-        const BASE_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
+<div id="overlay">
+    <h1>🧟 ZOMBIE CITY</h1>
+    <p>🖱️ WASD = Bouger | Souris = Regarder</p>
+    <p>🔫 Clic Gauche = Tirer | F = Parry</p>
+    <p>⚡ Ramasse les sphères brillantes (power-ups)</p>
+    <p>💀 Boss = Chien Prankeur (Wave 8+)</p>
+    <input id="pseudo-input" placeholder="Ton pseudo..." style="margin-top:15px;padding:10px;font-size:18px;border-radius:5px;border:none;text-align:center;">
+    <button id="startBtn" onclick="startGame()">▶ JOUER</button>
+</div>
 
-        // État
-        let scene, camera, renderer, controls;
-        let player = { health: 100, zombiesKilled: 0, wins: 0, lastDamage: 0, powerup: null };
-        let zombies = [], powerups = [], boss = null, waves = 1, gameOver = false, keys = {};
-        let username = '';
-        let regenTimer = 0;
+<div id="hud">
+    <div id="healthbar-bg"><div id="healthbar"></div></div>
+    <div id="stats">Zombies: 0 | Wins: 0 | Wave: 1</div>
+</div>
+<div id="crosshair"></div>
+<div id="wave-alert"></div>
+<div id="powerup-msg"></div>
+<div id="parry-msg">⚡ PARRY !</div>
+<div id="leaderboard"><h3>🏆 TOP 10</h3><div id="lb-content">Chargement...</div></div>
+<div id="controls-hint">WASD: Bouger | Clic: Tirer | F: Parry | SHIFT: Sprint | ESC: Pause</div>
 
-        // Init
-        function init() {
-            // Pseudo
-            username = prompt('Ton pseudo pour leaderboard ?') || 'Anonyme_' + Math.floor(Math.random()*10000);
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.161.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.161.0/examples/jsm/"
+  }
+}
+</script>
 
-            scene = new THREE.Scene();
-            scene.fog = new THREE.Fog(0x404040, 10, 100);
+<script type="module">
+import * as THREE from 'three';
+import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
 
-            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-            renderer = new THREE.WebGLRenderer({ antialias: true });
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.shadowMap.enabled = true;
-            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-            document.body.appendChild(renderer.domElement);
+// ============= CONFIG JSONBIN =============
+const BIN_ID = 'TON_BIN_ID';
+const SECRET_KEY = 'TON_MASTER_KEY';
+const BASE_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
 
-            controls = new THREE.PointerLockControls(camera, renderer.domElement);
-            scene.add(controls.getObject());
-            controls.getObject().position.set(0, 1.8, 0);
+// ============= STATE =============
+let scene, camera, renderer, controls;
+let zombies = [], powerupsObjs = [], boss = null;
+let wave = 1, killed = 0, wins = 0;
+let hp = 100, lastDamage = 0, activePowerup = null, powerupEnd = 0;
+let keys = {}, locked = false, paused = false;
+let username = 'Joueur';
+let lbRefreshInterval;
 
-            renderer.domElement.addEventListener('click', () => controls.lock());
-            controls.addEventListener('lock', () => document.getElementById('crosshair').style.display = 'block');
-            controls.addEventListener('unlock', () => document.getElementById('crosshair').style.display = 'none');
+// ============= EXPOSE AU HTML =============
+window.startGame = function() {
+    const pseudo = document.getElementById('pseudo-input').value.trim();
+    if (pseudo) username = pseudo;
+    document.getElementById('overlay').style.display = 'none';
+    document.getElementById('hud').style.display = 'block';
+    document.getElementById('crosshair').style.display = 'block';
+    document.getElementById('leaderboard').style.display = 'block';
+    document.getElementById('controls-hint').style.display = 'block';
+    renderer.domElement.requestPointerLock();
+    paused = false;
+};
 
-            // Lumières
-            scene.add(new THREE.AmbientLight(0x404040, 0.4));
-            const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
-            dirLight.position.set(10, 20, 5);
-            dirLight.castShadow = true;
-            dirLight.shadow.mapSize.width = 2048;
-            dirLight.shadow.mapSize.height = 2048;
-            scene.add(dirLight);
+// ============= INIT =============
+function init() {
+    // Scene
+    scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x1a1a2e);
+    scene.fog = new THREE.FogExp2(0x1a1a2e, 0.012);
 
-            createCity();
-            loadLeaderboard();
+    // Camera
+    camera = new THREE.PerspectiveCamera(75, innerWidth/innerHeight, 0.1, 500);
+    camera.position.set(0, 1.8, 0);
 
-            document.addEventListener('keydown', onKeyDown);
-            document.addEventListener('keyup', onKeyUp);
-            renderer.domElement.addEventListener('click', shoot);
-            window.addEventListener('resize', onResize);
+    // Renderer
+    renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(innerWidth, innerHeight);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    document.body.appendChild(renderer.domElement);
 
-            animate();
+    // Controls
+    controls = new PointerLockControls(camera, renderer.domElement);
+    scene.add(controls.getObject());
+
+    // Pointer lock
+    document.addEventListener('pointerlockchange', () => {
+        locked = document.pointerLockElement === renderer.domElement;
+        if (!locked && !document.getElementById('overlay').style.display !== 'none') {
+            paused = true;
+            showOverlayPause();
         }
+    });
 
-        // Ville
-        function createCity() {
-            const citySize = 50;
-            for (let x = -citySize; x < citySize; x += 10) {
-                for (let z = -citySize; z < citySize; z += 10) {
-                    const height = Math.random() * 8 + 3;
-                    const building = new THREE.Mesh(
-                        new THREE.BoxGeometry(9, height, 9),
-                        new THREE.MeshLambertMaterial({ color: 0x444444 + Math.random() * 0x333333 })
-                    );
-                    building.position.set(x + 4.5, height / 2, z + 4.5);
-                    building.castShadow = true;
-                    building.receiveShadow = true;
-                    scene.add(building);
-                }
-            }
-            const ground = new THREE.Mesh(
-                new THREE.PlaneGeometry(200, 200),
-                new THREE.MeshLambertMaterial({ color: 0x222222 })
-            );
-            ground.rotation.x = -Math.PI / 2;
-            ground.receiveShadow = true;
-            scene.add(ground);
-        }
+    // Keys
+    document.addEventListener('keydown', e => {
+        keys[e.code] = true;
+        if (e.code === 'KeyF' && locked) doParry();
+    });
+    document.addEventListener('keyup', e => keys[e.code] = false);
 
-        // Spawn zombie
-        function spawnZombie() {
-            const zombieGeo = new THREE.CapsuleGeometry(0.4, 1.4);
-            const zombieMat = new THREE.MeshLambertMaterial({ color: 0x228B22 });
-            const zombie = new THREE.Mesh(zombieGeo, zombieMat);
-            zombie.position.set(
-                (Math.random() - 0.5) * 100,
-                1,
-                (Math.random() - 0.5) * 100
-            );
-            zombie.userData = { health: 40 + waves * 5, speed: 0.04 + waves * 0.005, meleeRange: 2.5, lastAttack: 0 };
-            zombies.push(zombie);
-            scene.add(zombie);
-        }
+    // Click = shoot
+    document.addEventListener('click', () => {
+        if (locked) shoot();
+    });
 
-        // Boss Chien Prankeur
-        function spawnBoss() {
-            const bossGeo = new THREE.SphereGeometry(1.2);
-            const bossMat = new THREE.MeshLambertMaterial({ color: 0xff1493, emissive: 0x330033 });
-            boss = new THREE.Mesh(bossGeo, bossMat);
-            boss.position.set(0, 1.5, -60);
-            boss.userData = { 
-                health: 800, 
-                speed: 0.025, 
-                meleeRange: 3.5, 
-                lastAttack: 0,
-                dancing: true 
-            };
-            scene.add(boss);
-        }
+    window.addEventListener('resize', () => {
+        camera.aspect = innerWidth/innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(innerWidth, innerHeight);
+    });
 
-        // Power-up
-        function spawnPowerup() {
-            const types = ['health', 'speed', 'damage'];
-            const powerup = new THREE.Mesh(
-                new THREE.SphereGeometry(0.4),
-                new THREE.MeshBasicMaterial({ 
-                    color: {health: 0x00ff00, speed: 0x0000ff, damage: 0xff0000}[types[Math.floor(Math.random()*3)]],
-                    emissive: 0x222222 
+    // Lights
+    scene.add(new THREE.AmbientLight(0x334455, 1.0));
+    const sun = new THREE.DirectionalLight(0xffffff, 0.6);
+    sun.position.set(20, 30, 20);
+    sun.castShadow = true;
+    sun.shadow.mapSize.set(2048, 2048);
+    sun.shadow.camera.near = 0.1;
+    sun.shadow.camera.far = 300;
+    sun.shadow.camera.left = -100;
+    sun.shadow.camera.right = 100;
+    sun.shadow.camera.top = 100;
+    sun.shadow.camera.bottom = -100;
+    scene.add(sun);
+
+    // Some point lights for atmosphere
+    const pl1 = new THREE.PointLight(0xff4400, 1.5, 30);
+    pl1.position.set(10, 5, 10);
+    scene.add(pl1);
+    const pl2 = new THREE.PointLight(0x4400ff, 1.5, 30);
+    pl2.position.set(-20, 5, -20);
+    scene.add(pl2);
+
+    createCity();
+    spawnInitialZombies();
+    startPowerupSpawner();
+    loadLeaderboard();
+    lbRefreshInterval = setInterval(loadLeaderboard, 30000);
+
+    animate();
+}
+
+// ============= CITY =============
+function createCity() {
+    // Ground
+    const ground = new THREE.Mesh(
+        new THREE.PlaneGeometry(400, 400, 20, 20),
+        new THREE.MeshLambertMaterial({ color: 0x1a1a1a })
+    );
+    ground.rotation.x = -Math.PI / 2;
+    ground.receiveShadow = true;
+    scene.add(ground);
+
+    // Roads (lignes blanches)
+    for (let i = -5; i <= 5; i++) {
+        const road = new THREE.Mesh(
+            new THREE.PlaneGeometry(2, 400),
+            new THREE.MeshBasicMaterial({ color: 0xffffff, opacity: 0.05, transparent: true })
+        );
+        road.rotation.x = -Math.PI / 2;
+        road.position.set(i * 20, 0.01, 0);
+        scene.add(road);
+        const road2 = road.clone();
+        road2.rotation.z = Math.PI / 2;
+        road2.position.set(0, 0.01, i * 20);
+        scene.add(road2);
+    }
+
+    // Buildings
+    const colors = [0x2d3436, 0x636e72, 0x4a4a8a, 0x6a2d2d, 0x2d6a2d];
+    for (let i = 0; i < 120; i++) {
+        const w = 6 + Math.random() * 8;
+        const h = 5 + Math.random() * 25;
+        const d = 6 + Math.random() * 8;
+        const building = new THREE.Mesh(
+            new THREE.BoxGeometry(w, h, d),
+            new THREE.MeshLambertMaterial({ color: colors[Math.floor(Math.random()*colors.length)] })
+        );
+        const px = (Math.random() - 0.5) * 180;
+        const pz = (Math.random() - 0.5) * 180;
+        if (Math.abs(px) < 10 && Math.abs(pz) < 10) continue; // clear spawn
+        building.position.set(px, h/2, pz);
+        building.castShadow = true;
+        building.receiveShadow = true;
+        scene.add(building);
+
+        // Fenêtres
+        for (let j = 0; j < 3; j++) {
+            const win = new THREE.Mesh(
+                new THREE.PlaneGeometry(0.8, 0.8),
+                new THREE.MeshBasicMaterial({
+                    color: Math.random() > 0.5 ? 0xffff88 : 0x334455,
+                    emissive: 0xffff00
                 })
             );
-            powerup.position.set(
-                (Math.random() - 0.5) * 80,
-                0.5,
-                (Math.random() - 0.5) * 80
+            win.position.set(
+                px + (Math.random()-0.5)*w*0.8,
+                h*0.4 + Math.random()*h*0.4,
+                pz + d/2 + 0.01
             );
-            powerup.userData.type = types[Math.floor(Math.random()*3)];
-            powerups.push(powerup);
-            scene.add(powerup);
+            scene.add(win);
+        }
+    }
+
+    // Street lights
+    for (let i = 0; i < 30; i++) {
+        const post = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.1, 0.1, 4),
+            new THREE.MeshLambertMaterial({ color: 0x888888 })
+        );
+        post.position.set(
+            (Math.random()-0.5)*160,
+            2,
+            (Math.random()-0.5)*160
+        );
+        scene.add(post);
+        const light = new THREE.PointLight(0xffffaa, 1, 15);
+        light.position.set(post.position.x, 4.2, post.position.z);
+        scene.add(light);
+    }
+}
+
+// ============= ZOMBIE =============
+function makeZombie(isBoss = false) {
+    const group = new THREE.Group();
+
+    if (isBoss) {
+        // Corps chien prankeur = sphère magenta
+        const body = new THREE.Mesh(
+            new THREE.SphereGeometry(1.2, 16, 16),
+            new THREE.MeshLambertMaterial({ color: 0xff1493, emissive: 0x550055 })
+        );
+        group.add(body);
+
+        // Tête
+        const head = new THREE.Mesh(
+            new THREE.BoxGeometry(0.9, 0.9, 0.9),
+            new THREE.MeshLambertMaterial({ color: 0xff69b4, emissive: 0x330033 })
+        );
+        head.position.y = 1.5;
+        group.add(head);
+
+        // Oreilles
+        [-0.5, 0.5].forEach(x => {
+            const ear = new THREE.Mesh(
+                new THREE.ConeGeometry(0.2, 0.5),
+                new THREE.MeshLambertMaterial({ color: 0xff1493 })
+            );
+            ear.position.set(x, 2.1, 0);
+            group.add(ear);
+        });
+
+        // Pattes
+        for (let i = 0; i < 4; i++) {
+            const leg = new THREE.Mesh(
+                new THREE.CylinderGeometry(0.15, 0.15, 0.7),
+                new THREE.MeshLambertMaterial({ color: 0xcc0066 })
+            );
+            const angle = (i / 4) * Math.PI * 2;
+            leg.position.set(Math.cos(angle)*0.8, -1, Math.sin(angle)*0.8);
+            group.add(leg);
         }
 
-        // Tir
-        function shoot() {
-            if (!controls.isLocked) return;
-            const raycaster = new THREE.Raycaster();
-            raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
-            const intersects = raycaster.intersectObjects(zombies.concat(boss ? [boss] : []));
-            if (intersects.length > 0) {
-                const target = intersects[0].object;
-                const dmg = player.powerup === 'damage' ? 120 : 60;
-                target.userData.health -= dmg;
-                if (target.userData.health <= 0) {
-                    scene.remove(target);
-                    zombies = zombies.filter(z => z !== target);
-                    if (target === boss) {
-                        player.wins++;
-                        alert(`Boss VAINCU! Wins: ${player.wins}\nScore sauvé!`);
-                        saveScore();
-                        resetWave();
-                    } else {
-                        player.zombiesKilled++;
-                    }
-                    updateUI();
-                }
+        group.userData = {
+            hp: 800, maxHp: 800,
+            speed: 0.03, range: 3.5,
+            lastAtk: 0, atkCool: 1500,
+            dmg: 25, isBoss: true,
+            danceTime: 0
+        };
+    } else {
+        // Corps zombie
+        const body = new THREE.Mesh(
+            new THREE.CapsuleGeometry(0.35, 1.1, 4, 8),
+            new THREE.MeshLambertMaterial({ color: 0x228B22, emissive: 0x002200 })
+        );
+        group.add(body);
+
+        // Tête
+        const head = new THREE.Mesh(
+            new THREE.SphereGeometry(0.3, 8, 8),
+            new THREE.MeshLambertMaterial({ color: 0x4a7a2a, emissive: 0x001100 })
+        );
+        head.position.y = 1.0;
+        group.add(head);
+
+        // Yeux rouges
+        [-0.1, 0.1].forEach(x => {
+            const eye = new THREE.Mesh(
+                new THREE.SphereGeometry(0.07),
+                new THREE.MeshBasicMaterial({ color: 0xff0000 })
+            );
+            eye.position.set(x, 1.05, 0.25);
+            group.add(eye);
+        });
+
+        group.userData = {
+            hp: 40 + wave * 8,
+            maxHp: 40 + wave * 8,
+            speed: 0.035 + wave * 0.004,
+            range: 2.2,
+            lastAtk: 0,
+            atkCool: 1200,
+            dmg: 12.5,
+            isBoss: false
+        };
+    }
+
+    // HP bar
+    const barBg = new THREE.Mesh(
+        new THREE.PlaneGeometry(1, 0.12),
+        new THREE.MeshBasicMaterial({ color: 0x333333 })
+    );
+    barBg.position.y = isBoss ? 3 : 1.5;
+    barBg.renderOrder = 1;
+    group.add(barBg);
+
+    const barFill = new THREE.Mesh(
+        new THREE.PlaneGeometry(1, 0.12),
+        new THREE.MeshBasicMaterial({ color: isBoss ? 0xff00ff : 0xff0000 })
+    );
+    barFill.position.y = isBoss ? 3 : 1.5;
+    barFill.position.z = 0.01;
+    barFill.renderOrder = 2;
+    group.userData.hpBar = barFill;
+    group.add(barFill);
+
+    return group;
+}
+
+function spawnZombie() {
+    const z = makeZombie(false);
+    const angle = Math.random() * Math.PI * 2;
+    const dist = 40 + Math.random() * 40;
+    z.position.set(
+        camera.position.x + Math.cos(angle) * dist,
+        1.2,
+        camera.position.z + Math.sin(angle) * dist
+    );
+    zombies.push(z);
+    scene.add(z);
+}
+
+function spawnBoss() {
+    boss = makeZombie(true);
+    boss.position.set(30, 1.5, -30);
+    scene.add(boss);
+    showWaveAlert('⚠️ CHIEN PRANKEUR EST LÀ !', '#ff00ff');
+}
+
+function spawnInitialZombies() {
+    for (let i = 0; i < 10; i++) spawnZombie();
+}
+
+// ============= POWERUPS =============
+const PU_TYPES = [
+    { name: 'speed', color: 0x00aaff, label: '⚡ SPEED x2 (8s)' },
+    { name: 'damage', color: 0xff4400, label: '🔥 DAMAGE x3 (8s)' },
+    { name: 'health', color: 0x00ff44, label: '💚 +30 HP' },
+    { name: 'regen', color: 0x88ff88, label: '🌿 REGEN (10s)' }
+];
+
+function spawnPowerup() {
+    const type = PU_TYPES[Math.floor(Math.random() * PU_TYPES.length)];
+    const pu = new THREE.Mesh(
+        new THREE.OctahedronGeometry(0.5),
+        new THREE.MeshBasicMaterial({ color: type.color, wireframe: false })
+    );
+    const glow = new THREE.PointLight(type.color, 2, 5);
+    pu.add(glow);
+    pu.position.set(
+        (Math.random()-0.5) * 80,
+        0.6,
+        (Math.random()-0.5) * 80
+    );
+    pu.userData = { type: type.name, label: type.label, time: Date.now() };
+    powerupsObjs.push(pu);
+    scene.add(pu);
+    // Expire après 15s
+    setTimeout(() => {
+        scene.remove(pu);
+        powerupsObjs = powerupsObjs.filter(p => p !== pu);
+    }, 15000);
+}
+
+function startPowerupSpawner() {
+    spawnPowerup();
+    spawnPowerup();
+    setInterval(() => {
+        if (powerupsObjs.length < 5) spawnPowerup();
+    }, 5000);
+}
+
+// ============= SHOOT =============
+function shoot() {
+    const ray = new THREE.Raycaster();
+    ray.setFromCamera(new THREE.Vector2(0,0), camera);
+    const targets = zombies.concat(boss ? [boss] : []);
+    const hits = ray.intersectObjects(targets, true);
+    if (hits.length > 0) {
+        const hit = hits[0].object;
+        let group = hit;
+        while (group.parent && !group.userData.hp) group = group.parent;
+        const dmg = activePowerup === 'damage' ? 180 : 60;
+        group.userData.hp -= dmg;
+
+        // Update HP bar
+        if (group.userData.hpBar) {
+            const ratio = Math.max(0, group.userData.hp / group.userData.maxHp);
+            group.userData.hpBar.scale.x = ratio;
+            group.userData.hpBar.position.x = -(1 - ratio) / 2;
+        }
+
+        if (group.userData.hp <= 0) {
+            scene.remove(group);
+            if (group.userData.isBoss) {
+                boss = null;
+                wins++;
+                onWin();
+            } else {
+                zombies = zombies.filter(z => z !== group);
+                killed++;
             }
+            updateHUD();
+        }
+    }
+}
+
+// ============= PARRY =============
+let parryActive = false;
+let lastParry = 0;
+function doParry() {
+    const now = Date.now();
+    if (now - lastParry < 2000) return; // Cooldown 2s
+    lastParry = now;
+    parryActive = true;
+    hp = Math.min(100, hp + 10); // Parry = regen 10hp + invincibilité courte
+    lastDamage = now; // Reset regen timer
+    const pm = document.getElementById('parry-msg');
+    pm.style.display = 'block';
+    setTimeout(() => { pm.style.display = 'none'; parryActive = false; }, 800);
+    updateHUD();
+}
+
+// ============= UPDATE =============
+let lastTime = 0;
+function animate(now = 0) {
+    requestAnimationFrame(animate);
+    const delta = Math.min((now - lastTime) / 1000, 0.05);
+    lastTime = now;
+
+    if (locked && !paused) {
+        updateMovement(delta);
+        updateZombies(delta);
+        updatePowerups();
+        updateRegen();
+        checkWave();
+    }
+
+    // HP bars face camera
+    const allEnemies = zombies.concat(boss ? [boss] : []);
+    allEnemies.forEach(e => {
+        if (e.userData.hpBar) {
+            e.userData.hpBar.parent.children
+                .filter(c => c.isMesh && c.userData !== e.userData)
+                .forEach(bar => bar.lookAt(camera.position));
+        }
+    });
+
+    renderer.render(scene, camera);
+}
+
+function updateMovement(delta) {
+    const speed = (activePowerup === 'speed' ? 18 : 9) * delta;
+    const sprint = keys['ShiftLeft'] || keys['ShiftRight'] ? 1.6 : 1;
+    if (keys['KeyW']) controls.moveForward(speed * sprint);
+    if (keys['KeyS']) controls.moveForward(-speed * sprint);
+    if (keys['KeyA']) controls.moveRight(-speed * sprint);
+    if (keys['KeyD']) controls.moveRight(speed * sprint);
+}
+
+function updateZombies(delta) {
+    const pp = controls.getObject().position;
+    const allEnemies = zombies.concat(boss ? [boss] : []);
+    allEnemies.forEach(enemy => {
+        const dist = enemy.position.distanceTo(pp);
+        const dir = pp.clone().sub(enemy.position).normalize();
+
+        if (enemy.userData.isBoss) {
+            // Danse
+            const t = Date.now() * 0.002;
+            enemy.rotation.y = t * 3;
+            enemy.position.y = 1.5 + Math.sin(t * 4) * 0.4;
+            enemy.children[0] && (enemy.children[0].rotation.z = Math.sin(t * 5) * 0.3);
         }
 
-        // Update zombies
-        function updateZombies() {
-            const playerPos = controls.getObject().position;
-            for (let i = zombies.length - 1; i >= 0; i--) {
-                const zombie = zombies[i];
-                const dir = playerPos.clone().sub(zombie.position).normalize();
-                zombie.position.add(dir.multiplyScalar(zombie.userData.speed));
-                zombie.lookAt(playerPos);
+        enemy.position.x += dir.x * enemy.userData.speed;
+        enemy.position.z += dir.z * enemy.userData.speed;
+        enemy.lookAt(pp.x, enemy.position.y, pp.z);
 
-                if (zombie.position.distanceTo(playerPos) < zombie.userData.meleeRange) {
-                    const now = performance.now();
-                    if (now - zombie.userData.lastAttack > 1200) {
-                        player.health -= 12.5;  // 2 coups = 25%
-                        player.lastDamage = now;
-                        zombie.userData.lastAttack = now;
-                        if (player.health <= 0) gameOver = true;
-                        updateUI();
-                    }
-                }
-
-                if (zombie.position.distanceTo(playerPos) > 120) {
-                    scene.remove(zombie);
-                    zombies.splice(i, 1);
-                }
-            }
-        }
-
-        // Update boss
-        function updateBoss() {
-            if (!boss) return;
-            const playerPos = controls.getObject().position;
-            const dir = playerPos.clone().sub(boss.position).normalize();
-            boss.position.add(dir.multiplyScalar(boss.userData.speed));
-            boss.lookAt(playerPos);
-            if (boss.userData.dancing) {
-                boss.rotation.y += 0.15;
-                boss.rotation.x += 0.05 * Math.sin(performance.now() * 0.005);
-            }
-
-            if (boss.position.distanceTo(playerPos) < boss.userData.meleeRange) {
-                const now = performance.now();
-                if (now - boss.userData.lastAttack > 1800) {
-                    player.health -= 25;
-                    player.lastDamage = now;
-                    boss.userData.lastAttack = now;
-                    if (player.health <= 0) gameOver = true;
-                    updateUI();
-                }
-            }
-        }
-
-        // Update powerups
-        function updatePowerups() {
-            const playerPos = controls.getObject().position;
-            for (let i = powerups.length - 1; i >= 0; i--) {
-                const pu = powerups[i];
-                pu.rotation.y += 0.08;
-                pu.position.y += Math.sin(performance.now() * 0.005 + i) * 0.01;
-
-                if (pu.position.distanceTo(playerPos) < 2) {
-                    const type = pu.userData.type;
-                    if (type === 'health') player.health = Math.min(100, player.health + 30);
-                    else if (type === 'speed') { player.powerup = 'speed'; setTimeout(() => player.powerup = null, 8000); }
-                    else { player.powerup = 'damage'; setTimeout(() => player.powerup = null, 8000); }
-                    scene.remove(pu);
-                    powerups.splice(i, 1);
-                    updateUI();
-                }
-            }
-        }
-
-        // Regen
-        function updateRegen() {
-            const now = performance.now();
-            if (now - player.lastDamage > 7000) {
-                player.health = Math.min(100, player.health + 0.2);
-                updateUI();
-            }
-        }
-
-        // Waves
-        function updateWaves() {
-            if (zombies.length < waves * 8) spawnZombie();
-            if (Math.random() < 0.015) spawnPowerup();
-            if (waves >= 8 && !boss) spawnBoss();
-            if (zombies.length === 0 && waves > 1 && !boss) waves++;
-            document.getElementById('score').textContent = `Zombies: ${player.zombiesKilled} | Wins: ${player.wins} | Wave: ${waves}`;
-        }
-
-        // UI
-        function updateUI() {
-            const healthEl = document.getElementById('health');
-            healthEl.textContent = `Vie: ${Math.floor(player.health)}%`;
-            healthEl.style.color = player.health > 50 ? 'lime' : player.health > 25 ? 'orange' : 'red';
-        }
-
-        // Inputs
-        function onKeyDown(e) { keys[e.code] = true; }
-        function onKeyUp(e) { keys[e.code] = false; }
-
-        function updateMovement(delta) {
-            const speed = (20 + (player.powerup === 'speed' ? 15 : 0)) * delta;
-            const velocity = new THREE.Vector3();
-            const direction = new THREE.Vector3();
-            if (keys['KeyW']) direction.z -= 1;
-            if (keys['KeyS']) direction.z += 1;
-            if (keys['KeyA']) direction.x -= 1;
-            if (keys['KeyD']) direction.x += 1;
-            direction.normalize();
-            if (keys['ShiftLeft']) speed *= 1.5;  // Sprint
-
-            controls.moveForward(-direction.z * speed);
-            controls.moveRight(direction.x * speed);
-
-            // Parry F
-            if (keys['KeyF']) {
-                player.lastDamage = performance.now() - 7000;  // Force regen
-            }
-        }
-
-        // Animate
-        function animate() {
-            requestAnimationFrame(animate);
-            if (gameOver || !controls.isLocked) {
-                renderer.render(scene, camera);
-                return;
-            }
-
-            const delta = 0.016;
-            updateMovement(delta);
-            updateZombies();
-            updateBoss();
-            updatePowerups();
-            updateRegen();
-            updateWaves();
-            renderer.render(scene, camera);
-        }
-
-        function onResize() {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        }
-
-        // === LEADERBOARD ===
-        async function apiCall(url, options = {}) {
-            try {
-                const res = await fetch(url, {
-                    ...options,
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Master-Key': SECRET_KEY,
-                        'Version-Key': 'latest'
-                    }
-                });
-                return await res.json();
-            } catch(e) {
-                console.warn('JSONBin offline, mode local');
-                return { record: [] };
-            }
-        }
-
-        async function loadLeaderboard() {
-            try {
-                const data = await apiCall(`${BASE_URL}/latest`, { method: 'GET' });
-                const lb = data.record || [];
-                const list = document.getElementById('lb-list');
-                list.innerHTML = '';
-                lb.sort((a, b) => b.wins - a.wins || b.zombiesKilled - a.zombiesKilled)
-                  .slice(0, 10).forEach((entry, i) => {
-                    const li = document.createElement('li');
-                    li.innerHTML = `<strong>${i+1}. ${entry.username}</strong><br>${entry.wins} wins • ${entry.zombiesKilled} zombies`;
-                    list.appendChild(li);
-                });
-            } catch(e) { console.error('LB fail', e); }
-        }
-
-        async function saveScore() {
-            try {
-                const data = await apiCall(`${BASE_URL}/latest`, { method: 'GET' });
-                const lb = data.record || [];
-                const entry = { username, zombiesKilled: player.zombiesKilled, wins: player.wins };
-                const userIndex = lb.findIndex(u => u.username === username);
-                if (userIndex > -1) {
-                    lb[userIndex] = entry;
+        if (dist < enemy.userData.range) {
+            const now = Date.now();
+            if (now - enemy.userData.lastAtk > enemy.userData.atkCool) {
+                if (!parryActive) {
+                    hp -= enemy.userData.dmg;
+                    lastDamage = now;
+                    if (hp <= 0) onDie();
                 } else {
-                    lb.push(entry);
+                    // Parry réussi = rebond zombie
+                    enemy.position.add(dir.clone().negate().multiplyScalar(3));
+                    if (!enemy.userData.isBoss) enemy.userData.hp -= 30;
                 }
-                // Top 100 max
-                lb.sort((a,b) => b.wins - a.wins || b.zombiesKilled - a.zombiesKilled).slice(0,100);
-                
-                await apiCall(BASE_URL, {
-                    method: 'PUT',
-                    body: JSON.stringify(lb)
-                });
-                loadLeaderboard();
-            } catch(e) { console.log('Saved local only'); }
+                enemy.userData.lastAtk = now;
+                updateHUD();
+            }
         }
+    });
+}
 
-        function resetWave() {
-            waves = 1;
+function updatePowerups() {
+    const pp = controls.getObject().position;
+    const now = Date.now();
+    if (activePowerup && now > powerupEnd) {
+        activePowerup = null;
+        document.getElementById('powerup-msg').style.display = 'none';
+    }
+    powerupsObjs.forEach((pu, i) => {
+        pu.rotation.y += 0.04;
+        pu.rotation.x += 0.02;
+        pu.position.y = 0.6 + Math.sin(now * 0.003 + i) * 0.2;
+        if (pu.position.distanceTo(pp) < 2.5) {
+            const t = pu.userData.type;
+            if (t === 'health') hp = Math.min(100, hp + 30);
+            else if (t === 'regen') { activePowerup = 'regen'; powerupEnd = now + 10000; }
+            else { activePowerup = t; powerupEnd = now + 8000; }
+            scene.remove(pu);
+            powerupsObjs = powerupsObjs.filter(p => p !== pu);
+            const msg = document.getElementById('powerup-msg');
+            msg.textContent = pu.userData.label;
+            msg.style.display = 'block';
+            msg.style.color = '#' + pu.material.color.getHexString();
+            setTimeout(() => msg.style.display = 'none', 2000);
+            updateHUD();
+        }
+    });
+}
+
+function updateRegen() {
+    const now = Date.now();
+    if (now - lastDamage > 7000 || activePowerup === 'regen') {
+        hp = Math.min(100, hp + 0.15);
+        updateHUD();
+    }
+}
+
+function checkWave() {
+    const maxZombies = 8 + wave * 4;
+    if (zombies.length < maxZombies && !boss) spawnZombie();
+    if (killed > 0 && killed % 30 === 0 && !boss && wave >= 3 && zombies.length === 0) {
+        wave++;
+        showWaveAlert(`💀 WAVE ${wave} !`, '#ff0000');
+        setTimeout(() => { for(let i=0;i<wave*2;i++) spawnZombie(); }, 1000);
+    }
+    if (killed >= 30 && !boss && wave >= 8) spawnBoss();
+}
+
+// ============= EVENTS =============
+function onWin() {
+    showWaveAlert('🏆 BOSS VAINCU !', '#ffd700');
+    saveScore();
+    setTimeout(() => {
+        wave++;
+        for (let i = 0; i < wave * 3; i++) spawnZombie();
+        showWaveAlert(`💀 WAVE ${wave} !`, '#ff4400');
+    }, 5000);
+}
+
+function onDie() {
+    hp = 0;
+    updateHUD();
+    locked = false;
+    document.exitPointerLock();
+    saveScore();
+    setTimeout(() => {
+        if (confirm(`💀 MORT ! Zombies tués: ${killed} | Wins: ${wins}\nRecommencer ?`)) {
+            hp = 100; killed = 0; wins = 0; wave = 1;
             zombies.forEach(z => scene.remove(z));
             zombies = [];
-            if (boss) scene.remove(boss);
-            boss = null;
+            if (boss) { scene.remove(boss); boss = null; }
+            updateHUD();
+            renderer.domElement.requestPointerLock();
         }
+    }, 200);
+}
 
-        // START
-        init();
-    </script>
+function showWaveAlert(text, color) {
+    const el = document.getElementById('wave-alert');
+    el.textContent = text;
+    el.style.color = color;
+    el.style.display = 'block';
+    setTimeout(() => el.style.display = 'none', 3000);
+}
+
+function showOverlayPause() {
+    const ol = document.getElementById('overlay');
+    ol.innerHTML = `<h1>⏸ PAUSE</h1><button onclick="resumeGame()">▶ REPRENDRE</button>`;
+    ol.style.display = 'flex';
+}
+
+window.resumeGame = function() {
+    document.getElementById('overlay').style.display = 'none';
+    paused = false;
+    renderer.domElement.requestPointerLock();
+};
+
+function updateHUD() {
+    hp = Math.max(0, hp);
+    const pct = Math.floor(hp);
+    document.getElementById('healthbar').style.width = pct + '%';
+    document.getElementById('healthbar').style.background =
+        hp > 60 ? 'lime' : hp > 30 ? 'orange' : 'red';
+    document.getElementById('stats').textContent =
+        `❤️ ${pct}% | 💀 ${killed} zombies | 🏆 ${wins} wins | Wave ${wave}` +
+        (activePowerup ? ` | ⚡ ${activePowerup.toUpperCase()}` : '');
+}
+
+// ============= JSONBIN LEADERBOARD =============
+async function apiCall(url, options = {}) {
+    try {
+        const res = await fetch(url, {
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Master-Key': SECRET_KEY
+            }
+        });
+        return await res.json();
+    } catch(e) { return { record: [] }; }
+}
+
+async function loadLeaderboard() {
+    const data = await apiCall(`${BASE_URL}/latest`, { method: 'GET' });
+    const lb = Array.isArray(data.record) ? data.record : [];
+    const sorted = lb.sort((a,b) => b.wins - a.wins || b.killed - a.killed).slice(0, 10);
+    document.getElementById('lb-content').innerHTML =
+        sorted.length === 0
+        ? '<em>Personne encore !</em>'
+        : sorted.map((e,i) => `
+            <div style="border-bottom:1px solid #333; padding:4px 0; font-size:13px;">
+                <b>${i+1}. ${e.username}</b><br>
+                🏆 ${e.wins} wins • 💀 ${e.killed}
+            </div>`).join('');
+}
+
+async function saveScore() {
+    const data = await apiCall(`${BASE_URL}/latest`, { method: 'GET' });
+    const lb = Array.isArray(data.record) ? data.record : [];
+    const idx = lb.findIndex(e => e.username === username);
+    const entry = { username, wins, killed };
+    if (idx > -1) {
+        if (wins > lb[idx].wins || (wins === lb[idx].wins && killed > lb[idx].killed)) {
+            lb[idx] = entry;
+        }
+    } else {
+        lb.push(entry);
+    }
+    lb.sort((a,b) => b.wins - a.wins || b.killed - a.killed).splice(100);
+    await apiCall(BASE_URL, { method: 'PUT', body: JSON.stringify(lb) });
+    loadLeaderboard();
+}
+
+// START
+init();
+</script>
 </body>
 </html>
