@@ -664,14 +664,36 @@ function updateParticles(){
     particles.forEach(p=>{p.position.add(p.userData.v);p.userData.v.y-=0.018;});
 }
 
-function checkWave(){
-    if(!boss && zombies.length<10+wave*5) spawnZombie();
-    if(killed>0 && killed%40===0 && zombies.length===0 && !boss){
-        wave++;
-        showWaveAlert(`💀 WAVE ${wave} !`,'#ff4400');
-        setTimeout(()=>{for(let i=0;i<wave*3;i++) spawnZombie();},1500);
+let waveInProgress = false;
+let zombiesThisWave = 0;
+let zombiesSpawnedThisWave = 0;
+
+function startWave(n) {
+    waveInProgress = true;
+    zombiesThisWave = 8 + n * 6;      // Nb zombies par wave
+    zombiesSpawnedThisWave = 0;
+    showWaveAlert(`🌊 WAVE ${n} !`, '#ff4400');
+    // Spawn progressif
+    const interval = setInterval(() => {
+        if (zombiesSpawnedThisWave >= zombiesThisWave) { clearInterval(interval); return; }
+        spawnZombie();
+        zombiesSpawnedThisWave++;
+    }, 800); // 1 zombie toutes les 0.8s
+}
+
+function checkWave() {
+    // Boss wave 8+
+    if (wave >= 8 && !boss && zombies.length === 0 && !waveInProgress) {
+        spawnBoss(); return;
     }
-    if(wave>=8 && !boss && killed>=40) spawnBoss();
+    // Wave terminée = tous les zombies morts
+    if (waveInProgress && zombiesSpawnedThisWave >= zombiesThisWave && zombies.length === 0 && !boss) {
+        waveInProgress = false;
+        wave++;
+        killed = 0; // Reset compteur par wave
+        setTimeout(() => startWave(wave), 3000); // 3s de pause entre waves
+    }
+    // Spawn progressif en cours
 }
 
 function onWin(){
