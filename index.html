@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>One Piece Incremental RPG</title>
+    <title>One Piece Incremental RPG - HARD MODE</title>
     <style>
-        /* STYLE RPG PIRATE - Océans et aventure */
+        /* STYLE AMÉLIORÉ */
         * {
             margin: 0;
             padding: 0;
@@ -21,189 +21,223 @@
         }
 
         .container {
-            max-width: 1400px;
+            max-width: 1600px;
             margin: 0 auto;
             padding: 20px;
             display: grid;
-            grid-template-columns: 300px 1fr 350px;
-            grid-template-rows: auto 1fr;
+            grid-template-columns: 300px 1fr 400px;
+            grid-template-rows: auto 1fr auto;
             gap: 20px;
             min-height: 100vh;
         }
 
         .header {
             grid-column: 1 / -1;
-            background: rgba(0, 50, 100, 0.9);
-            padding: 15px;
-            border-radius: 15px;
+            background: rgba(0, 50, 100, 0.95);
+            padding: 20px;
+            border-radius: 20px;
             text-align: center;
-            border: 3px solid #ffd700;
-            box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+            border: 4px solid #ffd700;
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.4);
         }
 
         .stats { grid-area: 2 / 1 / 3 / 2; }
         .combat { grid-area: 2 / 2 / 3 / 3; }
-        .inventory { grid-area: 2 / 3 / 3 / 4; }
+        .shop-fish { grid-area: 2 / 3 / 3 / 4; }
+        .save-section { grid-area: 3 / 1 / 4 / -1; }
 
         .panel {
-            background: rgba(20, 40, 80, 0.95);
-            border: 2px solid #4a90e2;
-            border-radius: 15px;
-            padding: 20px;
+            background: rgba(20, 40, 80, 0.97);
+            border: 3px solid #4a90e2;
+            border-radius: 20px;
+            padding: 25px;
             height: fit-content;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
         }
 
         .panel h2 {
             color: #ffd700;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
             text-align: center;
-            font-size: 1.4em;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            font-size: 1.5em;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.9);
         }
 
         .stat-bar {
-            background: rgba(0,0,0,0.5);
-            height: 25px;
-            border-radius: 12px;
-            margin: 8px 0;
+            background: rgba(0,0,0,0.6);
+            height: 30px;
+            border-radius: 15px;
+            margin: 10px 0;
             overflow: hidden;
-            position: relative;
         }
 
         .stat-fill {
             height: 100%;
-            transition: width 0.3s ease;
-            border-radius: 12px;
+            transition: width 0.4s ease;
+            border-radius: 15px;
         }
 
-        .hp-fill { background: linear-gradient(90deg, #ff4444, #ff8888); }
-        .xp-fill { background: linear-gradient(90deg, #44ff44, #88ff88); }
+        .hp-fill { background: linear-gradient(90deg, #ff3333, #ff7777); }
+        .xp-fill { background: linear-gradient(90deg, #33ff33, #77ff77); }
 
         button {
             width: 100%;
-            padding: 12px;
-            margin: 6px 0;
+            padding: 15px;
+            margin: 8px 0;
             background: linear-gradient(145deg, #4a90e2, #357abd);
             color: white;
             border: none;
-            border-radius: 10px;
-            font-size: 1em;
+            border-radius: 12px;
+            font-size: 1.1em;
             font-weight: bold;
             cursor: pointer;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.4);
         }
 
         button:hover { 
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.5);
             background: linear-gradient(145deg, #357abd, #2a5a9d);
         }
 
         button:disabled {
-            background: #666;
+            background: #555;
             cursor: not-allowed;
             transform: none;
+            opacity: 0.6;
+        }
+
+        .heal-btn { background: linear-gradient(145deg, #4CAF50, #45a049) !important; }
+        .clear-btn { background: linear-gradient(145deg, #ff6b6b, #ee5a52) !important; }
+        .fishing-btn { 
+            background: linear-gradient(145deg, #2196F3, #1976D2) !important;
+            font-size: 1.3em;
+            padding: 20px;
         }
 
         .enemy-display {
             text-align: center;
-            margin: 20px 0;
-        }
-
-        .enemy-hp {
-            font-size: 1.2em;
-            color: #ffd700;
-            margin-bottom: 10px;
+            margin: 25px 0;
+            padding: 20px;
+            background: rgba(255,0,0,0.1);
+            border-radius: 15px;
+            border: 2px solid #ff4444;
         }
 
         .log {
-            height: 200px;
+            height: 220px;
             overflow-y: auto;
-            background: rgba(0,0,0,0.7);
-            border-radius: 10px;
-            padding: 10px;
-            font-size: 0.9em;
-            line-height: 1.4;
-            border: 1px solid #444;
+            background: rgba(0,0,0,0.8);
+            border-radius: 15px;
+            padding: 15px;
+            font-size: 0.95em;
+            line-height: 1.5;
+            border: 2px solid #444;
+            margin-top: 15px;
         }
 
         .log-entry {
-            margin: 2px 0;
-            padding: 2px 5px;
-            border-radius: 3px;
+            margin: 4px 0;
+            padding: 4px 8px;
+            border-radius: 5px;
         }
 
-        .log-combat { color: #ff6666; }
-        .log-loot { color: #88ff88; }
-        .log-info { color: #aaa; }
+        .log-combat { color: #ff7777; border-left: 4px solid #ff4444; }
+        .log-loot { color: #88ff88; border-left: 4px solid #44ff44; }
+        .log-info { color: #ccc; }
+        .log-warning { color: #ffaa00; border-left: 4px solid #ff8800; }
 
         .island-info {
-            background: rgba(255, 215, 0, 0.1);
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 15px;
+            background: rgba(255, 215, 0, 0.15);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
             text-align: center;
-            border: 2px solid #ffd700;
+            border: 3px solid #ffd700;
+            font-size: 1.1em;
         }
 
         .fruit-active {
-            background: linear-gradient(145deg, #ff6b35, #f7931e);
-            padding: 10px;
-            border-radius: 10px;
-            margin: 10px 0;
+            background: linear-gradient(145deg, #ff4444, #cc0000);
+            padding: 15px;
+            border-radius: 15px;
+            margin: 15px 0;
             text-align: center;
             font-weight: bold;
+            border: 3px solid #ff6666;
         }
 
-        .save-section {
-            grid-column: 1 / -1;
-            margin-top: 20px;
+        .fruits-inventory {
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 15px;
         }
 
-        .fishing-btn {
-            background: linear-gradient(145deg, #4CAF50, #45a049) !important;
-            font-size: 1.2em;
-            padding: 15px;
+        .fruit-item {
+            background: rgba(255,255,255,0.15);
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+
+        .fruit-item:hover {
+            background: rgba(255,215,0,0.3);
+            border-color: #ffd700;
+            transform: scale(1.02);
         }
 
         .item-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-            gap: 10px;
-            margin-top: 15px;
+            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+            gap: 12px;
+            margin-top: 20px;
         }
 
         .item {
-            background: rgba(255,255,255,0.1);
-            padding: 8px;
-            border-radius: 8px;
+            background: rgba(255,255,255,0.12);
+            padding: 12px;
+            border-radius: 12px;
             text-align: center;
             cursor: pointer;
             transition: all 0.3s;
+            border: 2px solid transparent;
         }
 
-        .item:hover {
-            background: rgba(255,215,0,0.3);
+        .item:hover { 
+            background: rgba(255,215,0,0.4);
+            border-color: #ffd700;
             transform: scale(1.05);
         }
 
-        @media (max-width: 1200px) {
+        .price-tag {
+            background: #4CAF50;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+
+        @media (max-width: 1400px) {
             .container {
                 grid-template-columns: 1fr;
-                grid-template-rows: auto auto 1fr auto;
+                grid-template-rows: auto auto 1fr auto auto;
             }
-            .stats, .combat, .inventory { grid-column: 1; }
+            .stats, .combat, .shop-fish { grid-column: 1; }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>🏴‍☠️ ONE PIECE INCREMENTAL RPG 🏝️</h1>
+            <h1>🏴‍☠️ ONE PIECE INCREMENTAL RPG - HARD MODE 🏝️</h1>
             <div id="islandDisplay" class="island-info">
-                Île de départ - Niveau recommandé: 1-5
+                Île de départ - Niveau recommandé: 1-10
             </div>
             <div id="fruitDisplay" class="fruit-active" style="display: none;">
                 Aucun fruit du démon actif
@@ -213,10 +247,11 @@
         <!-- STATISTIQUES -->
         <div class="panel stats">
             <h2>📊 Statistiques</h2>
-            <div>Nom: <span id="playerName">Luffy</span></div>
-            <div>Niveau: <span id="playerLevel">1</span></div>
-            <div>XP: <span id="playerXP">0</span>/<span id="xpToNext">100</span></div>
+            <div style="font-size: 1.2em; margin-bottom: 15px;">
+                Nom: <span id="playerName">Luffy</span> | Niv: <span id="playerLevel">1</span>
+            </div>
             
+            <div>XP: <span id="playerXP">0</span>/<span id="xpToNext">100</span></div>
             <div class="stat-bar">
                 <div id="xpBar" class="stat-fill xp-fill" style="width: 0%"></div>
             </div>
@@ -230,63 +265,69 @@
             <div>Défense: <span id="playerDefense">5</span></div>
             <div>Vitesse: <span id="playerSpeed">10</span></div>
             <div>Or: <span id="playerGold">0</span> 💰</div>
+            
+            <button class="heal-btn" onclick="healAtShop()">❤️ Soigner (50 or)</button>
         </div>
 
         <!-- COMBAT -->
         <div class="panel combat">
             <h2>⚔️ Zone de Combat</h2>
             <div id="enemyDisplay" class="enemy-display" style="display: none;">
-                <div id="enemyName" class="enemy-hp"></div>
+                <div id="enemyName" style="font-size: 1.5em; color: #ffd700;"></div>
                 <div>HP: <span id="enemyHP">0</span>/<span id="enemyMaxHP">0</span></div>
                 <div class="stat-bar">
                     <div id="enemyHPBar" class="stat-fill hp-fill" style="width: 100%"></div>
                 </div>
-                <div>Niveau: <span id="enemyLevel">-</span></div>
+                <div style="font-size: 1.2em;">Niveau: <span id="enemyLevel">-</span></div>
             </div>
             
             <div id="combatButtons" style="display: none;">
                 <button onclick="playerAction('attack')">⚔️ Attaquer</button>
                 <button onclick="playerAction('skill')" id="skillBtn" disabled>🔥 Compétence</button>
-                <button onclick="playerAction('item')">🎒 Objet</button>
-                <button onclick="playerAction('flee')">🏃 Fuir</button>
+                <button onclick="playerAction('flee')">🏃 Fuir (50%)</button>
             </div>
             
             <button onclick="findEnemy()" id="findEnemyBtn">🔍 Chercher un ennemi</button>
             <div id="combatLog" class="log"></div>
         </div>
 
-        <!-- INVENTAIRE & PÊCHE -->
-        <div class="panel inventory">
-            <h2>🎣 Pêche & Inventaire</h2>
-            <button class="fishing-btn" onclick="fish()">🎣 Aller pêcher (1s)</button>
+        <!-- BOUTIQUE + PÊCHE + FRUITS -->
+        <div class="panel shop-fish">
+            <h2>🏪 Boutique & Pêche</h2>
             
-            <h3 style="margin-top: 20px;">Inventaire (20 max)</h3>
-            <div id="inventoryGrid" class="item-grid"></div>
+            <button class="fishing-btn" onclick="fish()">🎣 PÊCHE LÉGENDAIRE (5s)</button>
             
-            <h3 style="margin-top: 20px;">Équipement</h3>
-            <div id="equipmentSlots">
+            <h3 style="margin-top: 25px; color: #ffd700;">Inventaire Fruits (Mangez-en 1 seul)</h3>
+            <div id="fruitsInventory" class="fruits-inventory"></div>
+            
+            <h3 style="margin-top: 20px;">Équipement Actif</h3>
+            <div id="equipmentSlots" style="font-size: 0.95em; line-height: 1.8;">
                 Arme: <span id="equipWeapon">-</span><br>
                 Armure: <span id="equipArmor">-</span><br>
                 Accessoire: <span id="equipAccessory">-</span>
             </div>
+            
+            <h3 style="margin-top: 20px;">Objets (20 max)</h3>
+            <div id="inventoryGrid" class="item-grid"></div>
+            <button class="clear-btn" onclick="clearInventory()">🗑️ Vider inventaire</button>
         </div>
 
         <!-- SAUVEGARDE -->
         <div class="panel save-section">
             <h2>💾 Sauvegarde</h2>
-            <button onclick="exportSave()">📥 Exporter sauvegarde</button>
+            <button onclick="exportSave()">📥 Exporter</button>
             <input type="file" id="importFile" accept=".json" style="display: none;">
-            <button onclick="document.getElementById('importFile').click()">📤 Importer sauvegarde</button>
-            <button onclick="resetSave()" style="background: #ff4444;">🗑️ Réinitialiser</button>
+            <button onclick="document.getElementById('importFile').click()">📤 Importer</button>
+            <button onclick="resetSave()" style="background: #ff3333;">🗑️ Reset TOTAL</button>
         </div>
     </div>
 
     <script>
         // ========================================
-        // JEU ONE PIECE INCREMENTAL RPG - VERSION COMPLET
+        // ONE PIECE RPG - HARD MODE ULTRA
+        // Progression x10 plus dure - Fruits nerfés
         // ========================================
 
-        // ÉTAT DU JEU
         let gameState = {
             player: {
                 name: "Luffy",
@@ -294,17 +335,14 @@
                 xp: 0,
                 hp: 100,
                 maxHP: 100,
-                attack: 10,
-                defense: 5,
-                speed: 10,
+                baseAttack: 10,
+                baseDefense: 5,
+                baseSpeed: 10,
                 gold: 0,
-                devilFruit: null,
+                devilFruit: null,  // Actif
+                devilFruitsInventory: [],  // Stockés
                 inventory: [],
-                equipment: {
-                    weapon: null,
-                    armor: null,
-                    accessory: null
-                }
+                equipment: { weapon: null, armor: null, accessory: null }
             },
             currentIsland: 0,
             currentEnemy: null,
@@ -312,89 +350,73 @@
             log: []
         };
 
-        // ÎLES (progression longue)
+        // ÎLES AVEC ÉTAGES HP SCALÉS
         const islands = [
-            { name: "Île de Foosha", levelReq: 1, enemies: ["pirate_novice", "bandit"], boss: null },
-            { name: "Île de Shells Town", levelReq: 5, enemies: ["marine_recrue", "pirate_exp", "monstre_marin_petit"], boss: "axehand_morgan" },
-            { name: "Île d'Orange Town", levelReq: 12, enemies: ["pirate_buggy", "clown", "monstre_marin"], boss: "buggy_capitaine" },
-            { name: "Syrup Village", levelReq: 20, enemies: ["pirate_kuro", "chat_noir"], boss: "kuro" },
-            { name: "Baratie", levelReq: 30, enemies: ["pirate_don_krieg", "cuistot"], boss: "don_krieg" },
-            { name: "Arlong Park", levelReq: 45, enemies: ["poisson_homme", "arlong_pirate"], boss: "arlong" },
-            { name: "Loguetown", levelReq: 65, enemies: ["marine_capitaine", "dragon_pirate"], boss: "smoker" }
+            { name: "Île de Foosha", levelReq: 1, hpMultiplier: 1.0, enemies: ["pirate_novice"], boss: null },
+            { name: "Shells Town", levelReq: 15, hpMultiplier: 1.5, enemies: ["marine_recrue", "pirate_exp"], boss: "axehand_morgan" },
+            { name: "Orange Town", levelReq: 35, hpMultiplier: 2.0, enemies: ["pirate_buggy", "clown"], boss: "buggy_capitaine" },
+            { name: "Syrup Village", levelReq: 60, hpMultiplier: 3.0, enemies: ["pirate_kuro"], boss: "kuro" },
+            { name: "Baratie", levelReq: 90, hpMultiplier: 4.5, enemies: ["pirate_don_krieg"], boss: "don_krieg" },
+            { name: "Arlong Park", levelReq: 130, hpMultiplier: 6.0, enemies: ["poisson_homme"], boss: "arlong" },
+            { name: "Loguetown", levelReq: 180, hpMultiplier: 8.0, enemies: ["marine_capitaine"], boss: "smoker" }
         ];
 
-        // ENNEMIS (toujours plus forts)
+        // ENNEMIS x3 HP + scaling agressif
         const enemies = {
-            pirate_novice: { name: "Pirate novice", level: 1, hp: 50, maxHP: 50, attack: 8, defense: 2, speed: 8, gold: 5, xp: 10 },
-            bandit: { name: "Bandit", level: 2, hp: 70, maxHP: 70, attack: 12, defense: 4, speed: 10, gold: 8, xp: 15 },
-            marine_recrue: { name: "Marine recrue", level: 5, hp: 120, maxHP: 120, attack: 18, defense: 8, speed: 12, gold: 15, xp: 25 },
-            pirate_exp: { name: "Pirate expérimenté", level: 6, hp: 140, maxHP: 140, attack: 22, defense: 10, speed: 14, gold: 20, xp: 30 },
-            monstre_marin_petit: { name: "Petit monstre marin", level: 7, hp: 160, maxHP: 160, attack: 25, defense: 12, speed: 10, gold: 25, xp: 35 },
-            axehand_morgan: { name: "Axe-Hand Morgan", level: 10, hp: 500, maxHP: 500, attack: 40, defense: 20, speed: 15, gold: 200, xp: 500, boss: true },
-            clown: { name: "Clown de Buggy", level: 12, hp: 200, maxHP: 200, attack: 30, defense: 15, speed: 20, gold: 35, xp: 50 },
-            pirate_buggy: { name: "Pirate de Buggy", level: 13, hp: 220, maxHP: 220, attack: 35, defense: 18, speed: 22, gold: 40, xp: 60 },
-            monstre_marin: { name: "Monstre marin", level: 15, hp: 300, maxHP: 300, attack: 45, defense: 25, speed: 12, gold: 60, xp: 80 },
-            buggy_capitaine: { name: "Buggy le Clown ★BOSS★", level: 18, hp: 1200, maxHP: 1200, attack: 70, defense: 35, speed: 30, gold: 1000, xp: 2000, boss: true },
-            // Ajoutez plus d'ennemis ici pour progression infinie
+            pirate_novice: { name: "Pirate novice", level: 1, hp: 80, maxHP: 80, attack: 12, defense: 3, speed: 8, gold: 8, xp: 15 },
+            marine_recrue: { name: "Marine recrue", level: 18, hp: 450, maxHP: 450, attack: 28, defense: 12, speed: 15, gold: 25, xp: 45 },
+            pirate_exp: { name: "Pirate expérimenté", level: 20, hp: 550, maxHP: 550, attack: 35, defense: 15, speed: 18, gold: 35, xp: 60 },
+            pirate_buggy: { name: "Pirate Buggy", level: 38, hp: 1200, maxHP: 1200, attack: 55, defense: 25, speed: 30, gold: 80, xp: 120 },
+            clown: { name: "Clown dément", level: 40, hp: 1400, maxHP: 1400, attack: 60, defense: 28, speed: 35, gold: 90, xp: 140 },
+            axehand_morgan: { name: "Axe-Hand Morgan ★BOSS★", level: 25, hp: 2500, maxHP: 2500, attack: 75, defense: 40, speed: 20, gold: 800, xp: 1500, boss: true },
+            buggy_capitaine: { name: "Buggy le Clown ★BOSS★", level: 45, hp: 6000, maxHP: 6000, attack: 120, defense: 65, speed: 50, gold: 5000, xp: 8000, boss: true }
         };
 
-        // FRUITS DU DÉMON (hiérarchie stricte)
+        // FRUITS NERFÉS (S-TIER quasi impossible)
         const devilFruits = {
-            s_tier: [
-                { name: "Hito Hito no Mi modèle Nika", power: 5, skill: "Gear 5", bonus: { attack: 3, hp: 2, speed: 2 }, transform: true },
-                { name: "Uo Uo no Mi modèle Seiryu", power: 4.8, skill: "Ragnarok", bonus: { attack: 4, hp: 1.5 }, transform: true },
-                { name: "Gura Gura no Mi", power: 4.5, skill: "Quake Fist", bonus: { attack: 4, defense: 1 }, transform: true },
-                { name: "Yami Yami no Mi", power: 4.2, skill: "Dark Vortex", bonus: { attack: 3.5, defense: 2 }, transform: true }
+            s_tier: [  // 0.1% chance seulement
+                { name: "Hito Hito no Mi Nika", power: 2.2, skill: "Gear 5", bonus: { attack: 1.8, hp: 1.2 }, tier: "S" },
+                { name: "Uo Uo no Mi Seiryu", power: 2.1, skill: "Ragnarok", bonus: { attack: 1.9, hp: 1.1 }, tier: "S" },
+                { name: "Gura Gura no Mi", power: 2.0, skill: "Quake", bonus: { attack: 1.7 }, tier: "S" }
             ],
-            a_tier: [
-                { name: "Mera Mera no Mi", power: 3.5, skill: "Fire Fist", bonus: { attack: 2.5 }, transform: true },
-                { name: "Goro Goro no Mi", power: 3.4, skill: "Lightning Bolt", bonus: { attack: 2.5, speed: 1.5 }, transform: true },
-                { name: "Tori Tori no Mi modèle Phoenix", power: 3.3, skill: "Phoenix Flame", bonus: { hp: 3 }, transform: true }
+            a_tier: [  // 0.5% 
+                { name: "Mera Mera no Mi", power: 1.6, skill: "Fire Fist", bonus: { attack: 1.2 }, tier: "A" },
+                { name: "Goro Goro no Mi", power: 1.5, skill: "Lightning", bonus: { attack: 1.1, speed: 1.2 }, tier: "A" }
             ],
-            b_tier: [
-                { name: "Ito Ito no Mi", power: 2.5, skill: "Strings Attack", bonus: { attack: 1.5, speed: 1 }, transform: true },
-                { name: "Doku Doku no Mi", power: 2.4, skill: "Poison Cloud", bonus: { attack: 2 } },
-                { name: "Hana Hana no Mi", power: 2.3, skill: "Bloom Strike", bonus: { attack: 1.5 } }
+            b_tier: [  // 1.5%
+                { name: "Ito Ito no Mi", power: 1.2, skill: "Strings", bonus: { attack: 0.8 }, tier: "B" },
+                { name: "Doku Doku no Mi", power: 1.1, skill: "Poison", bonus: { attack: 0.9 }, tier: "B" }
             ],
-            c_tier: [
-                { name: "Baku Baku no Mi", power: 1.5, skill: "Eat Attack", bonus: { attack: 1 } },
-                { name: "Kilo Kilo no Mi", power: 1.2, skill: "Heavy Smash", bonus: { attack: 0.8 } },
-                { name: "Toge Toge no Mi", power: 1.0, skill: "Spike Barrage", bonus: { attack: 0.7 } }
+            c_tier: [  // 3%
+                { name: "Kilo Kilo no Mi", power: 0.7, skill: "Heavy", bonus: { attack: 0.4 }, tier: "C" }
             ]
         };
 
-        // OBJETS DE PÊCHE
+        // LOOT PÊCHE (S-tier nerfé à 0.1%)
         const fishingLoot = {
-            common: [
-                { name: "Poisson banal", value: 1, type: "fish" },
-                { name: "Sardine", value: 2, type: "fish" },
-                { name: "Maquereau", value: 3, type: "fish" }
-            ],
+            common: [{ name: "Poisson banal", value: 2, type: "fish" }, { name: "Sardine", value: 4, type: "fish" }],
             rare: [
-                { name: "Thon rouge", value: 20, type: "fish" },
-                { name: "Espadon", value: 35, type: "fish" },
-                { name: "Trésor rouillé", value: 50, type: "treasure" },
-                { name: "Épée pirate +1 ATK", attack: 5, type: "weapon" }
+                { name: "Thon", value: 25, type: "fish" },
+                { name: "Épée +3 ATK", attack: 8, type: "weapon" },
+                { name: "Potion vie", heal: 50, type: "consumable" }
             ],
             treasure: [
-                { name: "Sac d'or", gold: 100, type: "treasure" },
-                { name: "Armure légère +2 DEF", defense: 8, type: "armor" },
-                { name: "Bague de vitesse +3 SPD", speed: 10, type: "accessory" },
-                { name: "Épée d'officier +10 ATK", attack: 15, type: "weapon" }
+                { name: "Sac d'or", gold: 150, type: "treasure" },
+                { name: "Armure +5 DEF", defense: 12, type: "armor" }
             ]
         };
 
-        // INITIALISATION
+        // INIT
         function initGame() {
             loadGame();
             updateDisplay();
-            logMessage("🏴‍☠️ Bienvenue dans One Piece Incremental RPG ! Cherchez des ennemis et pêchez pour progresser.", "info");
-            setInterval(autoSave, 30000); // Sauvegarde auto toutes les 30s
+            logMessage("💀 HARD MODE ACTIVÉ - Progression x10 plus dure !", "warning");
+            setInterval(autoSave, 30000);
         }
 
-        // MISE À JOUR AFFICHAGE
+        // AFFICHAGE
         function updateDisplay() {
-            // Stats joueur
+            // Stats (BASE uniquement - bonus séparés)
             document.getElementById('playerLevel').textContent = gameState.player.level;
             document.getElementById('playerXP').textContent = gameState.player.xp;
             document.getElementById('xpToNext').textContent = getXpToNextLevel();
@@ -407,22 +429,21 @@
             document.getElementById('playerName').textContent = gameState.player.name;
 
             // Barres
-            const xpPercent = (gameState.player.xp / getXpToNextLevel()) * 100;
-            document.getElementById('xpBar').style.width = Math.min(xpPercent, 100) + '%';
-            const hpPercent = (gameState.player.hp / gameState.player.maxHP) * 100;
-            document.getElementById('hpBar').style.width = hpPercent + '%';
+            document.getElementById('xpBar').style.width = Math.min((gameState.player.xp / getXpToNextLevel()) * 100, 100) + '%';
+            document.getElementById('hpBar').style.width = (gameState.player.hp / gameState.player.maxHP) * 100 + '%';
 
-            // Île actuelle
+            // Île + multiplicateur HP
             const island = islands[gameState.currentIsland];
             document.getElementById('islandDisplay').innerHTML = 
-                `${island.name} - Niv. recommandé: ${island.levelReq}-${island.levelReq + 10}`;
+                `${island.name}<br>🥵 HP Enemies x${island.hpMultiplier.toFixed(1)} | Niv ${island.levelReq}+`;
 
-            // Fruit du démon
+            // Fruit actif
             const fruitDiv = document.getElementById('fruitDisplay');
             if (gameState.player.devilFruit) {
                 fruitDiv.style.display = 'block';
                 fruitDiv.innerHTML = `🍎 ${gameState.player.devilFruit.name}<br>
-                    Puissance: S${gameState.player.devilFruit.power.toFixed(1)} | ${gameState.player.devilFruit.skill}`;
+                    [${gameState.player.devilFruit.tier}] ${gameState.player.devilFruit.skill}<br>
+                    <small>Bonus ATK: +${(gameState.player.devilFruit.bonus.attack * 10 || 0).toFixed(0)}%</small>`;
             } else {
                 fruitDiv.style.display = 'none';
             }
@@ -431,13 +452,10 @@
             if (gameState.inCombat && gameState.currentEnemy) {
                 document.getElementById('enemyDisplay').style.display = 'block';
                 document.getElementById('enemyName').textContent = gameState.currentEnemy.name;
-                document.getElementById('enemyHP').textContent = gameState.currentEnemy.hp;
-                document.getElementById('enemyMaxHP').textContent = gameState.currentEnemy.maxHP;
+                document.getElementById('enemyHP').textContent = Math.ceil(gameState.currentEnemy.hp);
+                document.getElementById('enemyMaxHP').textContent = Math.ceil(gameState.currentEnemy.maxHP);
                 document.getElementById('enemyLevel').textContent = gameState.currentEnemy.level;
-                
-                const enemyHpPercent = (gameState.currentEnemy.hp / gameState.currentEnemy.maxHP) * 100;
-                document.getElementById('enemyHPBar').style.width = enemyHpPercent + '%';
-                
+                document.getElementById('enemyHPBar').style.width = (gameState.currentEnemy.hp / gameState.currentEnemy.maxHP) * 100 + '%';
                 document.getElementById('combatButtons').style.display = 'block';
                 document.getElementById('findEnemyBtn').style.display = 'none';
             } else {
@@ -446,105 +464,238 @@
                 document.getElementById('findEnemyBtn').style.display = 'block';
             }
 
-            // Skill disponible si fruit ou niveau suffisant
-            document.getElementById('skillBtn').disabled = !gameState.player.devilFruit && gameState.player.level < 5;
-
-            // Équipement
-            document.getElementById('equipWeapon').textContent = gameState.player.equipment.weapon?.name || '-';
-            document.getElementById('equipArmor').textContent = gameState.player.equipment.armor?.name || '-';
-            document.getElementById('equipAccessory').textContent = gameState.player.equipment.accessory?.name || '-';
-
-            // Inventaire
             updateInventoryDisplay();
+            updateFruitsDisplay();
         }
 
-        // INVENTAIRE
-        function updateInventoryDisplay() {
-            const grid = document.getElementById('inventoryGrid');
-            grid.innerHTML = '';
-            
-            gameState.player.inventory.slice(0, 20).forEach((item, index) => {
-                const itemDiv = document.createElement('div');
-                itemDiv.className = 'item';
-                itemDiv.innerHTML = `${item.emoji || '📦'}<br>${item.name}<br>${item.value || item.attack || ''}`;
-                itemDiv.onclick = () => equipItem(index);
-                grid.appendChild(itemDiv);
-            });
+        // BOUTIQUE HEAL
+        function healAtShop() {
+            if (gameState.player.gold >= 50) {
+                gameState.player.gold -= 50;
+                gameState.player.hp = gameState.player.maxHP;
+                logMessage("❤️ Soigné à 100% HP (-50 or)", "info");
+            } else {
+                logMessage("❌ Pas assez d'or ! 50 or requis.", "warning");
+            }
+            updateDisplay();
         }
 
-        // COMBAT
+        // FRUITS INVENTAIRE
+        function updateFruitsDisplay() {
+            const container = document.getElementById('fruitsInventory');
+            container.innerHTML = gameState.player.devilFruitsInventory.length ? 
+                gameState.player.devilFruitsInventory.map((fruit, i) => 
+                    `<div class="fruit-item" onclick="eatFruit(${i})">
+                        🍎 ${fruit.name}<br>
+                        <small>[${fruit.tier}] ${fruit.skill}</small>
+                    </div>`
+                ).join('') : '<div style="color: #aaa;">Aucun fruit stocké</div>';
+        }
+
+        function eatFruit(index) {
+            if (gameState.player.devilFruit) {
+                logMessage("❌ Un seul fruit à la fois ! Jetez l'actif d'abord.", "warning");
+                return;
+            }
+            const fruit = gameState.player.devilFruitsInventory.splice(index, 1)[0];
+            gameState.player.devilFruit = fruit;
+            applyDevilFruitBonuses(fruit);
+            logMessage(`🍎 MANGEZ ${fruit.name} ! Pouvoir activé.`, "loot");
+            updateDisplay();
+        }
+
+        // COMBAT HARDCORE (fruits nerfés)
         function findEnemy() {
             const island = islands[gameState.currentIsland];
-            if (gameState.player.level < island.levelReq - 3) {
-                logMessage("❌ Trop faible pour cette île ! Montez de niveau.", "info");
+            if (gameState.player.level < island.levelReq * 0.7) {
+                logMessage(`🚫 Niveau ${island.levelReq} MINIMUM pour survivre ici !`, "warning");
                 return;
             }
 
             const enemyKeys = island.boss ? [island.boss] : island.enemies;
             const enemyKey = enemyKeys[Math.floor(Math.random() * enemyKeys.length)];
-            gameState.currentEnemy = { ...enemies[enemyKey] };
-            gameState.inCombat = true;
+            const baseEnemy = enemies[enemyKey];
             
-            logMessage(`⚔️ Un ${gameState.currentEnemy.name} (Niv. ${gameState.currentEnemy.level}) apparaît !`, "combat");
+            // HP SCALING PAR ÎLE
+            gameState.currentEnemy = {
+                ...baseEnemy,
+                hp: baseEnemy.hp * island.hpMultiplier,
+                maxHP: baseEnemy.maxHP * island.hpMultiplier
+            };
+            
+            gameState.inCombat = true;
+            logMessage(`⚔️ ${gameState.currentEnemy.name} apparaît ! (${Math.ceil(gameState.currentEnemy.maxHP)} HP)`, "combat");
             updateDisplay();
         }
 
         function playerAction(action) {
             if (!gameState.inCombat) return;
 
-            // Tour joueur
             let damage = 0;
             if (action === 'attack') {
-                damage = Math.max(1, getTotalAttack() - gameState.currentEnemy.defense + Math.floor(Math.random() * 5));
+                damage = Math.max(1, getTotalAttack() * 0.8 - gameState.currentEnemy.defense * 0.5);
                 gameState.currentEnemy.hp -= damage;
-                logMessage(`Vous infligez ${damage} dégâts !`, "combat");
+                logMessage(`Attaque: ${Math.ceil(damage)} dégâts`, "combat");
             } else if (action === 'skill' && gameState.player.devilFruit) {
                 const fruit = gameState.player.devilFruit;
-                damage = getTotalAttack() * fruit.power + 20;
+                damage = getTotalAttack() * fruit.power * 0.6;  // NERF 60%
                 gameState.currentEnemy.hp -= damage;
-                logMessage(`🍎 ${fruit.skill} ! ${damage} dégâts dévastateurs !`, "combat");
-            } else if (action === 'item') {
-                logMessage("📦 Pas d'objets utilisables en combat.", "info");
-                return;
+                logMessage(`${fruit.skill}: ${Math.ceil(damage)} dégâts`, "combat");
             } else if (action === 'flee') {
-                if (Math.random() < 0.7) {
-                    logMessage("🏃 Vous fuyez le combat !", "info");
+                if (Math.random() < 0.5) {  // 50% fail
+                    logMessage("🏃 Fuite réussie !", "info");
                     endCombat(false);
                     return;
                 } else {
-                    logMessage("❌ Impossible de fuir !", "combat");
+                    logMessage("💥 Impossible de fuir ! Contre-attaque !", "combat");
                 }
             }
 
-            // Vérif mort ennemi
             if (gameState.currentEnemy.hp <= 0) {
-                logMessage(`💀 ${gameState.currentEnemy.name} est vaincu ! +${gameState.currentEnemy.xp} XP, +${gameState.currentEnemy.gold} or`, "combat");
+                logMessage(`💀 Victoire ! +${gameState.currentEnemy.xp} XP +${gameState.currentEnemy.gold} or`, "combat");
                 gainXP(gameState.currentEnemy.xp);
                 gameState.player.gold += gameState.currentEnemy.gold;
-                if (Math.random() < 0.1) { // 10% drop objet
-                    const loot = fishingLoot.rare[Math.floor(Math.random() * fishingLoot.rare.length)];
-                    gameState.player.inventory.push({ ...loot, emoji: '⚔️' });
-                    logMessage(`🎁 ${loot.name} obtenu !`, "loot");
-                }
                 endCombat(true);
                 return;
             }
 
-            // Tour ennemi
+            // TOUR ENNEMI (plus agressif)
             setTimeout(() => {
-                const enemyDamage = Math.max(1, gameState.currentEnemy.attack - getTotalDefense() + Math.floor(Math.random() * 8));
-                gameState.player.hp -= enemyDamage;
-                logMessage(`${gameState.currentEnemy.name} vous inflige ${enemyDamage} dégâts !`, "combat");
+                const enemyDmg = Math.max(5, gameState.currentEnemy.attack * 1.2 - getTotalDefense() * 0.4);
+                gameState.player.hp -= enemyDmg;
+                logMessage(`${gameState.currentEnemy.name}: ${Math.ceil(enemyDmg)} dégâts`, "combat");
 
                 if (gameState.player.hp <= 0) {
-                    logMessage("💀 Vous êtes K.O. ! Retour à l'île précédente.", "combat");
-                    gameState.player.hp = gameState.player.maxHP * 0.5;
+                    gameState.player.hp = gameState.player.maxHP * 0.3;
                     gameState.currentIsland = Math.max(0, gameState.currentIsland - 1);
+                    logMessage("💀 DÉFAITE - Retour île précédente -30% HP", "warning");
                     endCombat(false);
-                    return;
                 }
                 updateDisplay();
-            }, 800);
+            }, 1200);
+        }
+
+        // PÊCHE ULTRA RARE S-TIER (0.1%)
+        function fish() {
+            const btn = document.querySelector('.fishing-btn');
+            btn.disabled = true;
+            btn.innerHTML = '⏳ Pêche... (5s)';
+
+            setTimeout(() => {
+                const rand = Math.random();
+                let loot;
+
+                if (rand < 0.65) {  // 65% commun
+                    loot = fishingLoot.common[Math.floor(Math.random() * fishingLoot.common.length)];
+                    gameState.player.gold += loot.value * 2;
+                    logMessage(`🐟 ${loot.name} (+${loot.value * 2} or)`, "loot");
+                } 
+                else if (rand < 0.88) {  // 23% rare
+                    loot = fishingLoot.rare[Math.floor(Math.random() * fishingLoot.rare.length)];
+                    if (loot.gold) gameState.player.gold += loot.gold;
+                    else gameState.player.inventory.push({...loot, emoji: '⚔️'});
+                    logMessage(`✨ ${loot.name}`, "loot");
+                }
+                else if (rand < 0.97) {  // 9% trésor
+                    loot = fishingLoot.treasure[Math.floor(Math.random() * fishingLoot.treasure.length)];
+                    gameState.player.gold += loot.gold || 0;
+                    if (!loot.gold) gameState.player.inventory.push({...loot, emoji: '⭐'});
+                    logMessage(`💎 TRÉSOR: ${loot.name}`, "loot");
+                }
+                else if (rand < 0.997) {  // 2.7% B/C tier
+                    const tier = Math.random() < 0.3 ? 'b_tier' : 'c_tier';
+                    loot = devilFruits[tier][Math.floor(Math.random() * devilFruits[tier].length)];
+                    gameState.player.devilFruitsInventory.push(loot);
+                    logMessage(`🍎 ${loot.name} [${loot.tier}] PIQUÉ !`, "loot");
+                }
+                else if (rand < 0.999) {  // 0.2% A tier
+                    loot = devilFruits.a_tier[Math.floor(Math.random() * devilFruits.a_tier.length)];
+                    gameState.player.devilFruitsInventory.push(loot);
+                    logMessage(`🍎 RARE ${loot.name} [A] !!!`, "loot");
+                }
+                else {  // 0.1% S tier (DIVIN)
+                    loot = devilFruits.s_tier[Math.floor(Math.random() * devilFruits.s_tier.length)];
+                    gameState.player.devilFruitsInventory.push(loot);
+                    logMessage(`🌟 MIRACLE !!! ${loot.name} [S] OBETNU !!!`, "loot");
+                }
+
+                btn.innerHTML = '🎣 PÊCHE LÉGENDAIRE (5s)';
+                btn.disabled = false;
+                updateDisplay();
+            }, 5000);
+        }
+
+        // INVENTAIRE + CLEAR
+        function updateInventoryDisplay() {
+            const grid = document.getElementById('inventoryGrid');
+            grid.innerHTML = gameState.player.inventory.slice(0, 20).map(item => `
+                <div class="item" onclick="equipItem('${item.name}')">
+                    ${item.emoji || '📦'}<br>${item.name}
+                    ${item.attack ? `<div>+${item.attack} ATK</div>` : ''}
+                    ${item.defense ? `<div>+${item.defense} DEF</div>` : ''}
+                </div>
+            `).join('');
+        }
+
+        function clearInventory() {
+            if (confirm("Vider TOUT l'inventaire ?")) {
+                gameState.player.inventory = [];
+                logMessage("🗑️ Inventaire vidé", "info");
+                updateDisplay();
+            }
+        }
+
+        function equipItem(itemName) {
+            const item = gameState.player.inventory.find(i => i.name === itemName);
+            if (!item) return;
+
+            // LOGIQUE ÉQUIPEMENT (simplifiée)
+            if (item.attack) gameState.player.equipment.weapon = item;
+            else if (item.defense) gameState.player.equipment.armor = item;
+            
+            gameState.player.inventory = gameState.player.inventory.filter(i => i.name !== itemName);
+            updateDisplay();
+        }
+
+        // XP ULTRA LENTE
+        function getXpToNextLevel() {
+            return Math.floor(200 * Math.pow(1.6, gameState.player.level - 1));  // x2 plus dur
+        }
+
+        function gainXP(amount) {
+            gameState.player.xp += amount;
+            while (gameState.player.xp >= getXpToNextLevel()) {
+                gameState.player.level++;
+                gameState.player.xp -= getXpToNextLevel();
+                gameState.player.maxHP += 15;
+                gameState.player.baseAttack += 2;
+                gameState.player.hp = gameState.player.maxHP;
+                logMessage(`🎉 NIVEAU ${gameState.player.level} !`, "info");
+            }
+        }
+
+        // STATS nerfées
+        function getTotalAttack() {
+            let total = gameState.player.baseAttack;
+            if (gameState.player.equipment.weapon) total += gameState.player.equipment.weapon.attack * 0.7;
+            if (gameState.player.devilFruit?.bonus.attack) total *= (1 + gameState.player.devilFruit.bonus.attack * 0.3);
+            return Math.floor(total);
+        }
+
+        function getTotalDefense() {
+            let total = gameState.player.baseDefense;
+            if (gameState.player.equipment.armor) total += gameState.player.equipment.armor.defense * 0.6;
+            return Math.floor(total);
+        }
+
+        function getTotalSpeed() {
+            let total = gameState.player.baseSpeed;
+            return Math.floor(total);
+        }
+
+        function applyDevilFruitBonuses(fruit) {
+            gameState.player.maxHP *= (fruit.bonus.hp || 1);
+            gameState.player.hp = gameState.player.maxHP;
         }
 
         function endCombat(victory) {
@@ -553,228 +704,76 @@
             updateDisplay();
         }
 
-        // PÊCHE (mécanique centrale)
-        function fish() {
-            // Cooldown visuel
-            const btn = document.querySelector('.fishing-btn');
-            const originalText = btn.innerHTML;
-            btn.disabled = true;
-            btn.innerHTML = '⏳ Pêche en cours...';
-
-            setTimeout(() => {
-                let loot;
-                const rand = Math.random();
-                
-                if (rand < 0.60) { // 60% commun
-                    loot = fishingLoot.common[Math.floor(Math.random() * fishingLoot.common.length)];
-                    gameState.player.gold += loot.value;
-                    logMessage(`🐟 ${loot.name} (+${loot.value} or)`, "loot");
-                } else if (rand < 0.85) { // 25% rare
-                    loot = fishingLoot.rare[Math.floor(Math.random() * fishingLoot.rare.length)];
-                    if (loot.gold) gameState.player.gold += loot.gold;
-                    else gameState.player.inventory.push({ ...loot, emoji: loot.type === 'weapon' ? '⚔️' : '💎' });
-                    logMessage(`✨ ${loot.name} obtenu !`, "loot");
-                } else if (rand < 0.95) { // 10% trésor
-                    loot = fishingLoot.treasure[Math.floor(Math.random() * fishingLoot.treasure.length)];
-                    if (loot.gold) gameState.player.gold += loot.gold;
-                    else gameState.player.inventory.push({ ...loot, emoji: '⭐' });
-                    logMessage(`💰 TRÉSOR: ${loot.name} !`, "loot");
-                } else { // 5% fruit du démon
-                    const tiers = ['s_tier', 'a_tier', 'b_tier', 'c_tier'];
-                    const tier = tiers[Math.floor(Math.random() * tiers.length)];
-                    loot = devilFruits[tier][Math.floor(Math.random() * devilFruits[tier].length)];
-                    gameState.player.devilFruit = loot;
-                    applyDevilFruitBonuses(loot);
-                    logMessage(`🍎 FRUIT DU DÉMON: ${loot.name} (Tier ${tier.toUpperCase().replace('_', '')}) ! INCROYABLE !`, "loot");
-                }
-
-                // Limite inventaire
-                if (gameState.player.inventory.length > 20) {
-                    gameState.player.inventory.shift();
-                }
-
-                btn.innerHTML = originalText;
-                btn.disabled = false;
-                updateDisplay();
-            }, 1000);
-        }
-
-        // ÉQUIPEMENT
-        function equipItem(index) {
-            if (index >= gameState.player.inventory.length) return;
+        function logMessage(msg, type = "info") {
+            gameState.log.unshift({ message: msg, type, time: Date.now() });
+            gameState.log = gameState.log.slice(0, 50);
             
-            const item = gameState.player.inventory[index];
-            if (!item) return;
-
-            // Équipe selon type
-            if (item.attack || item.type === 'weapon') {
-                if (gameState.player.equipment.weapon) {
-                    gameState.player.inventory.push(gameState.player.equipment.weapon);
-                }
-                gameState.player.equipment.weapon = item;
-            } else if (item.defense || item.type === 'armor') {
-                if (gameState.player.equipment.armor) {
-                    gameState.player.inventory.push(gameState.player.equipment.armor);
-                }
-                gameState.player.equipment.armor = item;
-            } else if (item.speed || item.type === 'accessory') {
-                if (gameState.player.equipment.accessory) {
-                    gameState.player.inventory.push(gameState.player.equipment.accessory);
-                }
-                gameState.player.equipment.accessory = item;
-            }
-
-            gameState.player.inventory.splice(index, 1);
-            updateDisplay();
-        }
-
-        // SYSTÈME XP PROGRESSIF
-        function gainXP(amount) {
-            gameState.player.xp += amount;
-            while (gameState.player.xp >= getXpToNextLevel()) {
-                levelUp();
-            }
-        }
-
-        function getXpToNextLevel() {
-            return Math.floor(100 * Math.pow(1.4, gameState.player.level - 1));
-        }
-
-        function levelUp() {
-            gameState.player.level++;
-            gameState.player.xp -= getXpToNextLevel();
-            gameState.player.maxHP += 20 + Math.floor(gameState.player.level / 2);
-            gameState.player.hp = gameState.player.maxHP;
-            gameState.player.attack += 3;
-            gameState.player.defense += 1;
-            gameState.player.speed += 2;
-            logMessage(`🎉 NIVEAU ${gameState.player.level} ! Stats augmentées !`, "info");
-        }
-
-        // STATS TOTALES (avec équipement + fruit)
-        function getTotalAttack() {
-            let total = gameState.player.attack;
-            if (gameState.player.equipment.weapon) total += gameState.player.equipment.weapon.attack || 0;
-            if (gameState.player.devilFruit) total += gameState.player.devilFruit.bonus.attack * 10 || 0;
-            return Math.floor(total);
-        }
-
-        function getTotalDefense() {
-            let total = gameState.player.defense;
-            if (gameState.player.equipment.armor) total += gameState.player.equipment.armor.defense || 0;
-            if (gameState.player.devilFruit) total += gameState.player.devilFruit.bonus.defense * 5 || 0;
-            return Math.floor(total);
-        }
-
-        function getTotalSpeed() {
-            let total = gameState.player.speed;
-            if (gameState.player.equipment.accessory) total += gameState.player.equipment.accessory.speed || 0;
-            if (gameState.player.devilFruit) total += gameState.player.devilFruit.bonus.speed * 5 || 0;
-            return Math.floor(total);
-        }
-
-        function applyDevilFruitBonuses(fruit) {
-            if (fruit.bonus.hp) gameState.player.maxHP += fruit.bonus.hp * 50;
-            if (fruit.bonus.attack) gameState.player.attack += fruit.bonus.attack * 10;
-            if (fruit.bonus.defense) gameState.player.defense += fruit.bonus.defense * 5;
-            if (fruit.bonus.speed) gameState.player.speed += fruit.bonus.speed * 5;
-            gameState.player.hp = gameState.player.maxHP;
-        }
-
-        // JOURNAL
-        function logMessage(message, type = "info") {
-            gameState.log.unshift({ message, type, time: Date.now() });
-            gameState.log = gameState.log.slice(0, 50); // Garde 50 dernières
-
             const logDiv = document.getElementById('combatLog');
             const entry = document.createElement('div');
             entry.className = `log-entry log-${type}`;
-            entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
             logDiv.insertBefore(entry, logDiv.firstChild);
-            
-            // Scroll auto
             logDiv.scrollTop = 0;
         }
 
-        // SAUVEGARDE (DOUBLE SYSTÈME)
-        function autoSave() {
-            localStorage.setItem('onePieceIncrementalSave', JSON.stringify(gameState));
-        }
-
+        // SAUVEGARDE (IDENTIQUE)
+        function autoSave() { localStorage.setItem('onePieceHardSave', JSON.stringify(gameState)); }
         function loadGame() {
-            const saved = localStorage.getItem('onePieceIncrementalSave');
-            if (saved) {
-                gameState = JSON.parse(saved);
-                logMessage("💾 Sauvegarde chargée !", "info");
-            }
+            const saved = localStorage.getItem('onePieceHardSave');
+            if (saved) gameState = JSON.parse(saved);
         }
-
         function exportSave() {
             const dataStr = JSON.stringify(gameState, null, 2);
-            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
             const url = URL.createObjectURL(dataBlob);
             const link = document.createElement('a');
             link.href = url;
-            link.download = `onepiece_save_${new Date().toISOString().slice(0,10)}.json`;
+            link.download = `onepiece_hard_${Date.now()}.json`;
             link.click();
         }
-
-        document.getElementById('importFile').addEventListener('change', function(e) {
+        document.getElementById('importFile').addEventListener('change', e => {
             const file = e.target.files[0];
             if (file) {
                 const reader = new FileReader();
-                reader.onload = function(e) {
-                    try {
-                        gameState = JSON.parse(e.target.result);
-                        updateDisplay();
-                        logMessage("💾 Sauvegarde importée avec succès !", "info");
-                    } catch (err) {
-                        alert("Erreur de sauvegarde !");
-                    }
+                reader.onload = evt => {
+                    gameState = JSON.parse(evt.target.result);
+                    updateDisplay();
                 };
                 reader.readAsText(file);
             }
         });
-
         function resetSave() {
-            if (confirm("Vraiment réinitialiser ? Progression PERDUE !")) {
-                localStorage.removeItem('onePieceIncrementalSave');
+            if (confirm("RESET TOTAL ?")) {
+                localStorage.removeItem('onePieceHardSave');
                 location.reload();
             }
         }
 
-        // NAVIGATION ÎLES (via boutons dans header)
-        document.addEventListener('DOMContentLoaded', function() {
-            // Ajout boutons îles dynamiques
+        // NAVIGATION ÎLES
+        document.addEventListener('DOMContentLoaded', () => {
             const header = document.querySelector('.header');
-            const islandNav = document.createElement('div');
-            islandNav.style.marginTop = '10px';
-            islandNav.innerHTML = '<h3>🏝️ Îles:</h3>';
-            islands.forEach((island, index) => {
+            const nav = document.createElement('div');
+            nav.style.marginTop = '15px';
+            nav.innerHTML = '<h3 style="color: #ffd700;">🏝️ Îles:</h3>';
+            islands.forEach((island, i) => {
                 const btn = document.createElement('button');
-                btn.style.width = 'auto';
-                btn.style.margin = '2px';
-                btn.style.padding = '5px 10px';
-                btn.style.fontSize = '0.8em';
-                btn.textContent = island.name;
-                btn.onclick = () => travelToIsland(index);
-                islandNav.appendChild(btn);
+                btn.style.width = 'auto'; btn.style.margin = '3px'; btn.style.padding = '8px 15px';
+                btn.style.fontSize = '0.9em';
+                btn.textContent = `${island.name} (N${island.levelReq})`;
+                btn.onclick = () => {
+                    if (gameState.player.level >= island.levelReq) {
+                        gameState.currentIsland = i;
+                        logMessage(`⛵ ${island.name} (x${island.hpMultiplier} HP)`);
+                    } else {
+                        logMessage(`🚫 Niveau ${island.levelReq} requis !`);
+                    }
+                    updateDisplay();
+                };
+                nav.appendChild(btn);
             });
-            header.appendChild(islandNav);
+            header.appendChild(nav);
         });
 
-        function travelToIsland(index) {
-            const island = islands[index];
-            if (gameState.player.level < island.levelReq) {
-                logMessage(`❌ Niveau ${island.levelReq} requis pour ${island.name} !`, "info");
-                return;
-            }
-            gameState.currentIsland = index;
-            logMessage(`⛵ Arrivée sur ${island.name}`, "info");
-            updateDisplay();
-        }
-
-        // DEMARRAGE
         initGame();
         updateDisplay();
     </script>
