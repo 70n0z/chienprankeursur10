@@ -1,790 +1,782 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8">
-<title>Zombie City Shooter</title>
-<style>
-* { margin:0; padding:0; box-sizing:border-box; }
-body { overflow:hidden; background:#1a2a3a; color:#fff; font-family:'Courier New', monospace; }
-#overlay {
-    position:fixed; inset:0;
-    background:linear-gradient(135deg,#0a0a1a,#1a0a2a);
-    display:flex; flex-direction:column;
-    align-items:center; justify-content:center;
-    z-index:9999 !important;
-}
-#overlay h1 { font-size:52px; color:#ff0044; text-shadow:0 0 30px #ff0044; margin-bottom:10px; }
-.controls-list { text-align:left; background:rgba(255,255,255,0.05); padding:15px 25px; border-radius:8px; margin-bottom:20px; list-style:none; }
-.controls-list li { margin:5px 0; font-size:15px; }
-#pseudo-input { padding:10px 20px; font-size:18px; border-radius:8px; border:2px solid #ff0044; background:#111; color:#fff; text-align:center; width:250px; display:block; margin:0 auto; }
-#startBtn {
-    display:block; margin:15px auto 0;
-    padding:15px 50px; font-size:24px;
-    background:#ff0044; color:#fff;
-    border:none; border-radius:10px;
-    cursor:pointer; z-index:10000;
-    position:relative; pointer-events:all;
-}
-#startBtn:hover { background:#cc0033; transform:scale(1.05); }
-#hud { position:fixed; bottom:20px; left:20px; display:none; z-index:200; pointer-events:none; }
-#healthbar-bg { background:#333; border-radius:5px; height:20px; width:220px; border:2px solid #666; }
-#healthbar { height:20px; width:100%; border-radius:5px; background:lime; transition:width 0.1s,background 0.1s; }
-#ammo { font-size:22px; margin-top:6px; }
-#stats-top { position:fixed; top:10px; left:50%; transform:translateX(-50%); font-size:17px; background:rgba(0,0,0,0.75); padding:6px 20px; border-radius:20px; display:none; z-index:200; pointer-events:none; white-space:nowrap; }
-#crosshair { position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); pointer-events:none; z-index:200; display:none; width:24px; height:24px; }
-#crosshair::before,#crosshair::after { content:''; position:absolute; background:red; }
-#crosshair::before { width:2px; height:24px; top:-12px; left:11px; }
-#crosshair::after { width:24px; height:2px; left:-1px; top:11px; }
-#leaderboard { position:fixed; top:10px; right:10px; background:rgba(0,0,0,0.92); padding:14px; border-radius:10px; font-size:13px; display:none; min-width:190px; z-index:200; border:1px solid #444; }
-#leaderboard h3 { color:gold; margin-bottom:8px; font-size:16px; }
-#wave-alert { position:fixed; top:35%; left:50%; transform:translateX(-50%); font-size:42px; font-weight:bold; display:none; pointer-events:none; z-index:300; text-shadow:3px 3px 12px #000; text-align:center; }
-#powerup-msg { position:fixed; bottom:120px; left:50%; transform:translateX(-50%); font-size:22px; font-weight:bold; display:none; pointer-events:none; z-index:200; text-shadow:2px 2px 8px #000; }
-#parry-msg { position:fixed; top:42%; left:50%; transform:translateX(-50%); font-size:32px; color:#00ffff; font-weight:bold; display:none; pointer-events:none; z-index:200; }
-#hit-flash { position:fixed; inset:0; background:transparent; pointer-events:none; z-index:300; transition:background 0.1s; }
-#slide-msg { position:fixed; bottom:80px; left:50%; transform:translateX(-50%); font-size:20px; color:#00aaff; display:none; pointer-events:none; z-index:200; }
-#boss-hp-wrap { position:fixed; top:50px; left:50%; transform:translateX(-50%); width:400px; display:none; z-index:200; text-align:center; }
-#boss-hp-label { font-size:16px; color:#ff00ff; margin-bottom:4px; text-shadow:0 0 10px #ff00ff; }
-#boss-hp-bg { background:#333; border-radius:5px; height:20px; border:2px solid #ff00ff; }
-#boss-hp-bar { height:20px; background:linear-gradient(90deg,#ff00ff,#ff0080); border-radius:5px; transition:width 0.1s; }
-#canvas-wrap { position:fixed; inset:0; z-index:1; }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>One Piece Incremental RPG</title>
+    <style>
+        /* STYLE RPG PIRATE - Océans et aventure */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #0c4a6e 0%, #1e3c72 50%, #2a5298 100%);
+            color: #fff;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            display: grid;
+            grid-template-columns: 300px 1fr 350px;
+            grid-template-rows: auto 1fr;
+            gap: 20px;
+            min-height: 100vh;
+        }
+
+        .header {
+            grid-column: 1 / -1;
+            background: rgba(0, 50, 100, 0.9);
+            padding: 15px;
+            border-radius: 15px;
+            text-align: center;
+            border: 3px solid #ffd700;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+        }
+
+        .stats { grid-area: 2 / 1 / 3 / 2; }
+        .combat { grid-area: 2 / 2 / 3 / 3; }
+        .inventory { grid-area: 2 / 3 / 3 / 4; }
+
+        .panel {
+            background: rgba(20, 40, 80, 0.95);
+            border: 2px solid #4a90e2;
+            border-radius: 15px;
+            padding: 20px;
+            height: fit-content;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+        }
+
+        .panel h2 {
+            color: #ffd700;
+            margin-bottom: 15px;
+            text-align: center;
+            font-size: 1.4em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+        }
+
+        .stat-bar {
+            background: rgba(0,0,0,0.5);
+            height: 25px;
+            border-radius: 12px;
+            margin: 8px 0;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .stat-fill {
+            height: 100%;
+            transition: width 0.3s ease;
+            border-radius: 12px;
+        }
+
+        .hp-fill { background: linear-gradient(90deg, #ff4444, #ff8888); }
+        .xp-fill { background: linear-gradient(90deg, #44ff44, #88ff88); }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            margin: 6px 0;
+            background: linear-gradient(145deg, #4a90e2, #357abd);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+
+        button:hover { 
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+            background: linear-gradient(145deg, #357abd, #2a5a9d);
+        }
+
+        button:disabled {
+            background: #666;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .enemy-display {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .enemy-hp {
+            font-size: 1.2em;
+            color: #ffd700;
+            margin-bottom: 10px;
+        }
+
+        .log {
+            height: 200px;
+            overflow-y: auto;
+            background: rgba(0,0,0,0.7);
+            border-radius: 10px;
+            padding: 10px;
+            font-size: 0.9em;
+            line-height: 1.4;
+            border: 1px solid #444;
+        }
+
+        .log-entry {
+            margin: 2px 0;
+            padding: 2px 5px;
+            border-radius: 3px;
+        }
+
+        .log-combat { color: #ff6666; }
+        .log-loot { color: #88ff88; }
+        .log-info { color: #aaa; }
+
+        .island-info {
+            background: rgba(255, 215, 0, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            text-align: center;
+            border: 2px solid #ffd700;
+        }
+
+        .fruit-active {
+            background: linear-gradient(145deg, #ff6b35, #f7931e);
+            padding: 10px;
+            border-radius: 10px;
+            margin: 10px 0;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .save-section {
+            grid-column: 1 / -1;
+            margin-top: 20px;
+        }
+
+        .fishing-btn {
+            background: linear-gradient(145deg, #4CAF50, #45a049) !important;
+            font-size: 1.2em;
+            padding: 15px;
+        }
+
+        .item-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .item {
+            background: rgba(255,255,255,0.1);
+            padding: 8px;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .item:hover {
+            background: rgba(255,215,0,0.3);
+            transform: scale(1.05);
+        }
+
+        @media (max-width: 1200px) {
+            .container {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto auto 1fr auto;
+            }
+            .stats, .combat, .inventory { grid-column: 1; }
+        }
+    </style>
 </head>
 <body>
+    <div class="container">
+        <div class="header">
+            <h1>🏴‍☠️ ONE PIECE INCREMENTAL RPG 🏝️</h1>
+            <div id="islandDisplay" class="island-info">
+                Île de départ - Niveau recommandé: 1-5
+            </div>
+            <div id="fruitDisplay" class="fruit-active" style="display: none;">
+                Aucun fruit du démon actif
+            </div>
+        </div>
 
-<!-- OVERLAY AU DESSUS DU CANVAS -->
-<div id="overlay">
-    <h1>🧟 ZOMBIE CITY</h1>
-    <ul class="controls-list">
-        <li>🎮 WASD = Bouger | SHIFT = Sprint</li>
-        <li>🖱️ Souris = Viser | Clic gauche = Tirer</li>
-        <li>⚡ C = Slide | 🛡️ F = Parry | 🔄 R = Recharger</li>
-        <li>💊 Ramasse les gemmes colorées = Power-up</li>
-        <li>☠️ Wave 8 : Boss Chien Prankeur arrive !</li>
-    </ul>
-    <input id="pseudo-input" placeholder="Ton pseudo..." maxlength="20">
-    <button id="startBtn">▶ JOUER</button>
-</div>
+        <!-- STATISTIQUES -->
+        <div class="panel stats">
+            <h2>📊 Statistiques</h2>
+            <div>Nom: <span id="playerName">Luffy</span></div>
+            <div>Niveau: <span id="playerLevel">1</span></div>
+            <div>XP: <span id="playerXP">0</span>/<span id="xpToNext">100</span></div>
+            
+            <div class="stat-bar">
+                <div id="xpBar" class="stat-fill xp-fill" style="width: 0%"></div>
+            </div>
+            
+            <div>HP: <span id="playerHP">100</span>/<span id="playerMaxHP">100</span></div>
+            <div class="stat-bar">
+                <div id="hpBar" class="stat-fill hp-fill" style="width: 100%"></div>
+            </div>
+            
+            <div>Attaque: <span id="playerAttack">10</span></div>
+            <div>Défense: <span id="playerDefense">5</span></div>
+            <div>Vitesse: <span id="playerSpeed">10</span></div>
+            <div>Or: <span id="playerGold">0</span> 💰</div>
+        </div>
 
-<!-- CANVAS ICI, EN DESSOUS -->
-<div id="canvas-wrap"></div>
+        <!-- COMBAT -->
+        <div class="panel combat">
+            <h2>⚔️ Zone de Combat</h2>
+            <div id="enemyDisplay" class="enemy-display" style="display: none;">
+                <div id="enemyName" class="enemy-hp"></div>
+                <div>HP: <span id="enemyHP">0</span>/<span id="enemyMaxHP">0</span></div>
+                <div class="stat-bar">
+                    <div id="enemyHPBar" class="stat-fill hp-fill" style="width: 100%"></div>
+                </div>
+                <div>Niveau: <span id="enemyLevel">-</span></div>
+            </div>
+            
+            <div id="combatButtons" style="display: none;">
+                <button onclick="playerAction('attack')">⚔️ Attaquer</button>
+                <button onclick="playerAction('skill')" id="skillBtn" disabled>🔥 Compétence</button>
+                <button onclick="playerAction('item')">🎒 Objet</button>
+                <button onclick="playerAction('flee')">🏃 Fuir</button>
+            </div>
+            
+            <button onclick="findEnemy()" id="findEnemyBtn">🔍 Chercher un ennemi</button>
+            <div id="combatLog" class="log"></div>
+        </div>
 
-<div id="hud">
-    <div id="healthbar-bg"><div id="healthbar"></div></div>
-    <div id="ammo">🔫 30 / 30</div>
-</div>
-<div id="stats-top"></div>
-<div id="crosshair"></div>
-<div id="wave-alert"></div>
-<div id="powerup-msg"></div>
-<div id="parry-msg">⚡ PARRY!</div>
-<div id="slide-msg">💨 SLIDE!</div>
-<div id="hit-flash"></div>
-<div id="boss-hp-wrap">
-    <div id="boss-hp-label">🐶 CHIEN PRANKEUR</div>
-    <div id="boss-hp-bg"><div id="boss-hp-bar" style="width:100%"></div></div>
-</div>
-<div id="leaderboard"><h3>🏆 TOP 10</h3><div id="lb-content">Chargement...</div></div>
+        <!-- INVENTAIRE & PÊCHE -->
+        <div class="panel inventory">
+            <h2>🎣 Pêche & Inventaire</h2>
+            <button class="fishing-btn" onclick="fish()">🎣 Aller pêcher (1s)</button>
+            
+            <h3 style="margin-top: 20px;">Inventaire (20 max)</h3>
+            <div id="inventoryGrid" class="item-grid"></div>
+            
+            <h3 style="margin-top: 20px;">Équipement</h3>
+            <div id="equipmentSlots">
+                Arme: <span id="equipWeapon">-</span><br>
+                Armure: <span id="equipArmor">-</span><br>
+                Accessoire: <span id="equipAccessory">-</span>
+            </div>
+        </div>
 
-<script type="importmap">
-{
-  "imports": {
-    "three": "https://unpkg.com/three@0.161.0/build/three.module.js",
-    "three/addons/": "https://unpkg.com/three@0.161.0/examples/jsm/"
-  }
-}
-</script>
+        <!-- SAUVEGARDE -->
+        <div class="panel save-section">
+            <h2>💾 Sauvegarde</h2>
+            <button onclick="exportSave()">📥 Exporter sauvegarde</button>
+            <input type="file" id="importFile" accept=".json" style="display: none;">
+            <button onclick="document.getElementById('importFile').click()">📤 Importer sauvegarde</button>
+            <button onclick="resetSave()" style="background: #ff4444;">🗑️ Réinitialiser</button>
+        </div>
+    </div>
 
-<script type="module">
-import * as THREE from 'three';
-import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
+    <script>
+        // ========================================
+        // JEU ONE PIECE INCREMENTAL RPG - VERSION COMPLET
+        // ========================================
 
-// ===== CONFIG JSONBIN =====
-const BIN_ID = '69b31e14c3097a1dd51dbe5e';
-const SECRET_KEY = '$2a$10$Lggm2f3BBHSU5Bfsn.0nwezYN0OXADYm8yZ1/7ZrY7PWKoa0nwAOC';
-const BASE_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
-
-// ===== STATE =====
-let scene, camera, renderer, controls;
-let zombies=[], powerupsObjs=[], boss=null, spells=[], particles=[];
-let buildings=[];
-let wave=1, killed=0, wins=0;
-let hp=100, lastDamage=0, activePowerup=null, powerupEnd=0;
-let keys={}, locked=false, paused=false;
-let username='Joueur';
-let ammo=30, maxAmmo=30, reloading=false;
-let sliding=false, slideDir=new THREE.Vector3();
-let weaponGroup;
-let parryActive=false, lastParry=0;
-let lastTime=0;
-
-// ===== BOUTON JOUER =====
-document.getElementById('startBtn').addEventListener('click', () => {
-    const p = document.getElementById('pseudo-input').value.trim();
-    if(p) username = p;
-    document.getElementById('overlay').style.display = 'none';
-    document.getElementById('hud').style.display = 'block';
-    document.getElementById('stats-top').style.display = 'block';
-    document.getElementById('crosshair').style.display = 'block';
-    document.getElementById('leaderboard').style.display = 'block';
-    paused = false;
-    renderer.domElement.requestPointerLock();
-});
-
-// ===== INIT =====
-function init() {
-    scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x1a2a3a);
-    scene.fog = new THREE.Fog(0x1a2a3a, 60, 200);
-
-    camera = new THREE.PerspectiveCamera(75, innerWidth/innerHeight, 0.1, 500);
-    camera.position.set(0, 2, 0);
-
-    renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setSize(innerWidth, innerHeight);
-    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
-    renderer.shadowMap.enabled = true;
-
-    // Canvas dans son wrapper z-index:1
-    document.getElementById('canvas-wrap').appendChild(renderer.domElement);
-    renderer.domElement.style.width = '100%';
-    renderer.domElement.style.height = '100%';
-
-    controls = new PointerLockControls(camera, renderer.domElement);
-    scene.add(controls.getObject());
-
-    document.addEventListener('pointerlockchange', () => {
-        locked = document.pointerLockElement === renderer.domElement;
-        if(!locked && document.getElementById('overlay').style.display === 'none') {
-            paused = true;
-            document.getElementById('overlay').innerHTML = `
-                <h1 style="color:#ff0044;font-size:48px;text-shadow:0 0 20px #ff0044">⏸ PAUSE</h1>
-                <button id="resumeBtn" style="margin-top:20px;padding:15px 50px;font-size:24px;background:#ff0044;color:#fff;border:none;border-radius:10px;cursor:pointer;position:relative;z-index:10000;">▶ REPRENDRE</button>`;
-            document.getElementById('overlay').style.display = 'flex';
-            document.getElementById('resumeBtn').addEventListener('click', () => {
-                document.getElementById('overlay').style.display = 'none';
-                paused = false;
-                renderer.domElement.requestPointerLock();
-            });
-        }
-    });
-
-    document.addEventListener('keydown', e => {
-        keys[e.code] = true;
-        if(e.code==='KeyF' && locked) doParry();
-        if(e.code==='KeyC' && locked && !sliding) doSlide();
-        if(e.code==='KeyR' && locked && !reloading) reload();
-    });
-    document.addEventListener('keyup', e => keys[e.code] = false);
-    document.addEventListener('mousedown', e => { if(locked && e.button===0) shoot(); });
-    window.addEventListener('resize', () => {
-        camera.aspect = innerWidth/innerHeight;
-        camera.updateProjectionMatrix();
-        renderer.setSize(innerWidth, innerHeight);
-    });
-
-    // LUMIÈRES
-    scene.add(new THREE.AmbientLight(0xffffff, 1.8));
-    const sun = new THREE.DirectionalLight(0xffffff, 2.0);
-    sun.position.set(50, 80, 50);
-    sun.castShadow = true;
-    sun.shadow.mapSize.set(2048,2048);
-    sun.shadow.camera.near=0.1; sun.shadow.camera.far=400;
-    sun.shadow.camera.left=-150; sun.shadow.camera.right=150;
-    sun.shadow.camera.top=150; sun.shadow.camera.bottom=-150;
-    scene.add(sun);
-    scene.add(new THREE.HemisphereLight(0x4477ff, 0x224400, 0.8));
-
-    createCity();
-    createWeapon();
-    startWave(1);
-    startPowerupSpawner();
-    loadLeaderboard();
-    setInterval(loadLeaderboard, 30000);
-    animate();
-}
-
-// ===== VILLE =====
-function createCity() {
-    // Sol
-    const ground = new THREE.Mesh(
-        new THREE.PlaneGeometry(400,400),
-        new THREE.MeshLambertMaterial({ color: 0x333333 })
-    );
-    ground.rotation.x = -Math.PI/2;
-    ground.receiveShadow = true;
-    scene.add(ground);
-
-    // Routes
-    for(let i=-5;i<=5;i++) {
-        const mat = new THREE.MeshBasicMaterial({color:0xffff00});
-        const rh = new THREE.Mesh(new THREE.PlaneGeometry(0.2,400),mat);
-        rh.rotation.x=-Math.PI/2; rh.position.set(i*18,0.02,0); scene.add(rh);
-        const rv = new THREE.Mesh(new THREE.PlaneGeometry(400,0.2),mat);
-        rv.rotation.x=-Math.PI/2; rv.position.set(0,0.02,i*18); scene.add(rv);
-    }
-
-    // Bâtiments
-    const bColors=[0x4466aa,0x884422,0x228844,0x664488,0xaa6622,0x227788,0x882244,0x448822];
-    for(let i=0;i<80;i++) {
-        const w=8+Math.random()*12, h=8+Math.random()*30, d=8+Math.random()*12;
-        const px=(Math.random()-0.5)*160, pz=(Math.random()-0.5)*160;
-        if(Math.abs(px)<15 && Math.abs(pz)<15) continue;
-        const building = new THREE.Mesh(
-            new THREE.BoxGeometry(w,h,d),
-            new THREE.MeshLambertMaterial({color:bColors[Math.floor(Math.random()*bColors.length)]})
-        );
-        building.position.set(px,h/2,pz);
-        building.castShadow=true; building.receiveShadow=true;
-        scene.add(building);
-        buildings.push({x:px,z:pz,hw:w/2+0.8,hd:d/2+0.8});
-        // Fenêtres
-        for(let j=0;j<5;j++){
-            const win = new THREE.Mesh(
-                new THREE.PlaneGeometry(0.9,0.9),
-                new THREE.MeshBasicMaterial({color:Math.random()>0.4?0xffff88:0x334455})
-            );
-            win.position.set(px+(Math.random()-0.5)*w*0.7, h*0.3+Math.random()*h*0.5, pz+d/2+0.05);
-            scene.add(win);
-        }
-    }
-
-    // Lampadaires
-    for(let i=0;i<25;i++){
-        const px=(Math.random()-0.5)*140, pz=(Math.random()-0.5)*140;
-        const post = new THREE.Mesh(new THREE.CylinderGeometry(0.1,0.1,5,8),new THREE.MeshLambertMaterial({color:0xaaaaaa}));
-        post.position.set(px,2.5,pz); scene.add(post);
-        const light = new THREE.PointLight(0xffffaa,1.5,22);
-        light.position.set(px,5.2,pz); scene.add(light);
-        const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.18),new THREE.MeshBasicMaterial({color:0xffffcc}));
-        bulb.position.set(px,5.2,pz); scene.add(bulb);
-    }
-}
-
-// ===== ARME =====
-function createWeapon(){
-    weaponGroup = new THREE.Group();
-    const body = new THREE.Mesh(new THREE.BoxGeometry(0.09,0.15,0.38),new THREE.MeshLambertMaterial({color:0x222222}));
-    weaponGroup.add(body);
-    const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.024,0.024,0.5,8),new THREE.MeshLambertMaterial({color:0x111111}));
-    barrel.rotation.x=Math.PI/2; barrel.position.set(0,0.03,-0.38); weaponGroup.add(barrel);
-    const grip = new THREE.Mesh(new THREE.BoxGeometry(0.075,0.2,0.11),new THREE.MeshLambertMaterial({color:0x1a1a1a}));
-    grip.position.set(0,-0.16,0.09); grip.rotation.x=0.2; weaponGroup.add(grip);
-    const slide = new THREE.Mesh(new THREE.BoxGeometry(0.065,0.065,0.32),new THREE.MeshLambertMaterial({color:0x555555}));
-    slide.position.set(0,0.07,-0.08); weaponGroup.add(slide);
-    const sight = new THREE.Mesh(new THREE.BoxGeometry(0.035,0.045,0.035),new THREE.MeshLambertMaterial({color:0x333333}));
-    sight.position.set(0,0.11,-0.08); weaponGroup.add(sight);
-    weaponGroup.position.set(0.22,-0.2,-0.44);
-    camera.add(weaponGroup);
-    scene.add(camera);
-}
-
-// ===== ZOMBIES =====
-function makeZombie(type='normal'){
-    const group = new THREE.Group();
-
-    if(type==='boss'){
-        const body=new THREE.Mesh(new THREE.SphereGeometry(1.3,16,16),new THREE.MeshLambertMaterial({color:0xff00cc,emissive:0x440044}));
-        group.add(body);
-        const head=new THREE.Mesh(new THREE.BoxGeometry(1.0,1.0,1.0),new THREE.MeshLambertMaterial({color:0xff66cc,emissive:0x220022}));
-        head.position.y=1.7; group.add(head);
-        [-0.5,0.5].forEach(x=>{
-            const ear=new THREE.Mesh(new THREE.ConeGeometry(0.22,0.6,8),new THREE.MeshLambertMaterial({color:0xff00cc}));
-            ear.position.set(x,2.4,0); group.add(ear);
-        });
-        for(let i=0;i<4;i++){
-            const leg=new THREE.Mesh(new THREE.CylinderGeometry(0.15,0.15,0.8,8),new THREE.MeshLambertMaterial({color:0xcc0088}));
-            const a=(i/4)*Math.PI*2;
-            leg.position.set(Math.cos(a)*0.9,-0.9,Math.sin(a)*0.9);
-            leg.name='leg_'+i; group.add(leg);
-        }
-        group.add(new THREE.PointLight(0xff00ff,3,12));
-        group.userData={type:'boss',hp:800,maxHp:800,speed:0.03,range:3.5,lastAtk:0,atkCool:1400,dmg:25};
-    }
-    else if(type==='flying'){
-        const body=new THREE.Mesh(new THREE.ConeGeometry(0.5,1.6,8),new THREE.MeshLambertMaterial({color:0x8800ff,emissive:0x330066,transparent:true,opacity:0.9}));
-        group.add(body);
-        const head=new THREE.Mesh(new THREE.SphereGeometry(0.4,8,8),new THREE.MeshLambertMaterial({color:0xaa44ff,emissive:0x220044}));
-        head.position.y=1.1; group.add(head);
-        [-0.12,0.12].forEach(x=>{
-            const eye=new THREE.Mesh(new THREE.SphereGeometry(0.1),new THREE.MeshBasicMaterial({color:0xffffff}));
-            eye.position.set(x,1.15,0.35); group.add(eye);
-        });
-        [-1,1].forEach(s=>{
-            const wing=new THREE.Mesh(new THREE.PlaneGeometry(1.4,0.7),new THREE.MeshLambertMaterial({color:0x6600ff,transparent:true,opacity:0.8,side:THREE.DoubleSide}));
-            wing.position.set(s*1.0,0.3,0); wing.rotation.y=s*0.4; wing.name='wing'; group.add(wing);
-        });
-        group.add(new THREE.PointLight(0x8800ff,2,8));
-        group.userData={type:'flying',hp:35+wave*5,maxHp:35+wave*5,speed:0.05+wave*0.003,range:2,lastAtk:0,atkCool:1000,dmg:10,flyOffset:Math.random()*Math.PI*2};
-    }
-    else if(type==='mage'){
-        const body=new THREE.Mesh(new THREE.CapsuleGeometry(0.42,1.3,4,8),new THREE.MeshLambertMaterial({color:0x0055aa,emissive:0x001133}));
-        group.add(body);
-        const head=new THREE.Mesh(new THREE.SphereGeometry(0.36,8,8),new THREE.MeshLambertMaterial({color:0x0077cc,emissive:0x001144}));
-        head.position.y=1.2; group.add(head);
-        const hat=new THREE.Mesh(new THREE.ConeGeometry(0.4,0.7,8),new THREE.MeshLambertMaterial({color:0x003388}));
-        hat.position.y=1.7; group.add(hat);
-        const staff=new THREE.Mesh(new THREE.CylinderGeometry(0.045,0.045,1.7,8),new THREE.MeshLambertMaterial({color:0x553300}));
-        staff.position.set(0.45,0.2,0); group.add(staff);
-        const orb=new THREE.Mesh(new THREE.SphereGeometry(0.18),new THREE.MeshBasicMaterial({color:0x00ccff}));
-        orb.position.set(0.45,1.1,0); group.add(orb);
-        const gl=new THREE.PointLight(0x00aaff,2,10); gl.position.set(0.45,1.1,0); group.add(gl);
-        group.userData={type:'mage',hp:70+wave*8,maxHp:70+wave*8,speed:0.018,range:28,lastAtk:0,atkCool:2800,dmg:18};
-    }
-    else {
-        const torso=new THREE.Mesh(new THREE.BoxGeometry(0.8,1.1,0.45),new THREE.MeshLambertMaterial({color:0x336633,emissive:0x0a1a0a}));
-        group.add(torso);
-        const head=new THREE.Mesh(new THREE.BoxGeometry(0.65,0.65,0.65),new THREE.MeshLambertMaterial({color:0x558844,emissive:0x0a150a}));
-        head.position.y=1.0; group.add(head);
-        [-0.14,0.14].forEach(x=>{
-            const eye=new THREE.Mesh(new THREE.SphereGeometry(0.09),new THREE.MeshBasicMaterial({color:0xff2200}));
-            eye.position.set(x,0.08,0.3); head.add(eye);
-        });
-        [-0.48,0.48].forEach((x,i)=>{
-            const arm=new THREE.Mesh(new THREE.CapsuleGeometry(0.12,0.75,4,8),new THREE.MeshLambertMaterial({color:0x446644}));
-            arm.position.set(x,0.1,0); arm.rotation.z=(i===0?1:-1)*0.3; arm.name='arm'; group.add(arm);
-        });
-        [-0.22,0.22].forEach(x=>{
-            const leg=new THREE.Mesh(new THREE.CapsuleGeometry(0.14,0.8,4,8),new THREE.MeshLambertMaterial({color:0x335533}));
-            leg.position.set(x,-1.0,0); leg.name='leg'; group.add(leg);
-        });
-        group.userData={type:'normal',hp:45+wave*8,maxHp:45+wave*8,speed:0.035+wave*0.004,range:2.2,lastAtk:0,atkCool:1200,dmg:12.5};
-    }
-
-    // HP Bar
-    const barBg=new THREE.Mesh(new THREE.PlaneGeometry(1.2,0.14),new THREE.MeshBasicMaterial({color:0x330000,depthTest:false}));
-    const barFill=new THREE.Mesh(new THREE.PlaneGeometry(1.2,0.14),new THREE.MeshBasicMaterial({color:type==='boss'?0xff00ff:type==='flying'?0xaa00ff:type==='mage'?0x0088ff:0xff2200,depthTest:false}));
-    const barY=type==='boss'?3.5:type==='flying'?2.2:1.9;
-    barBg.position.y=barY; barBg.renderOrder=999;
-    barFill.position.set(0,barY,0.01); barFill.renderOrder=1000;
-    group.userData.hpBarBg=barBg; group.userData.hpBar=barFill;
-    group.add(barBg); group.add(barFill);
-    return group;
-}
-
-function updateHpBar(e){
-    const r=Math.max(0,e.userData.hp/e.userData.maxHp);
-    e.userData.hpBar.scale.x=r;
-    e.userData.hpBar.position.x=-(1-r)*0.6;
-    e.userData.hpBarBg.lookAt(camera.position);
-    e.userData.hpBar.lookAt(camera.position);
-}
-
-function spawnZombie(){
-    const angle=Math.random()*Math.PI*2, dist=35+Math.random()*40;
-    const roll=Math.random();
-    const type=roll<0.2?'flying':roll<0.35?'mage':'normal';
-    const z=makeZombie(type);
-    z.position.set(
-        camera.position.x+Math.cos(angle)*dist,
-        type==='flying'?4+Math.random()*3:1.3,
-        camera.position.z+Math.sin(angle)*dist
-    );
-    zombies.push(z); scene.add(z);
-}
-
-function spawnBoss(){
-    boss=makeZombie('boss');
-    boss.position.set(camera.position.x+25,1.8,camera.position.z-25);
-    scene.add(boss);
-    document.getElementById('boss-hp-wrap').style.display='block';
-    showWaveAlert('🐶 CHIEN PRANKEUR ARRIVE !','#ff00ff');
-}
-
-function spawnInitialZombies(){ for(let i=0;i<12;i++) spawnZombie(); }
-
-// ===== POWERUPS =====
-const PU=[
-    {n:'health',c:0x00ff44,l:'💚 +40 HP'},
-    {n:'speed',c:0x00aaff,l:'⚡ SPEED (10s)'},
-    {n:'damage',c:0xff4400,l:'🔥 DAMAGE x3 (8s)'},
-    {n:'regen',c:0xaaff00,l:'🌿 REGEN RAPIDE (12s)'},
-    {n:'shield',c:0xffaa00,l:'🛡️ BOUCLIER (8s)'}
-];
-function spawnPowerup(){
-    const t=PU[Math.floor(Math.random()*PU.length)];
-    const pu=new THREE.Mesh(new THREE.OctahedronGeometry(0.6),new THREE.MeshBasicMaterial({color:t.c}));
-    pu.add(new THREE.PointLight(t.c,3,8));
-    pu.position.set((Math.random()-0.5)*80,0.8,(Math.random()-0.5)*80);
-    pu.userData={type:t.n,label:t.l,color:t.c};
-    powerupsObjs.push(pu); scene.add(pu);
-    setTimeout(()=>{ scene.remove(pu); powerupsObjs=powerupsObjs.filter(p=>p!==pu); },18000);
-}
-function startPowerupSpawner(){
-    for(let i=0;i<4;i++) spawnPowerup();
-    setInterval(()=>{ if(powerupsObjs.length<6) spawnPowerup(); },5000);
-}
-
-// ===== SORTS =====
-function launchSpell(pos){
-    const s=new THREE.Mesh(new THREE.SphereGeometry(0.28,8,8),new THREE.MeshBasicMaterial({color:0x00ccff}));
-    s.position.set(pos.x,pos.y+1.1,pos.z);
-    const dir=camera.position.clone().sub(s.position).normalize();
-    s.userData={vel:dir.multiplyScalar(0.2),born:Date.now()};
-    s.add(new THREE.PointLight(0x00aaff,2,6));
-    spells.push(s); scene.add(s);
-}
-
-// ===== TIRER =====
-function shoot(){
-    if(ammo<=0&&!reloading){reload();return;}
-    if(reloading) return;
-    ammo--; updateAmmoUI();
-    weaponGroup.position.z+=0.06;
-    setTimeout(()=>weaponGroup.position.z=-0.44,80);
-    const flash=new THREE.PointLight(0xffaa00,8,4);
-    const tip=new THREE.Vector3(0.22,-0.18,-0.8);
-    camera.localToWorld(tip); flash.position.copy(tip);
-    scene.add(flash); setTimeout(()=>scene.remove(flash),60);
-
-    const ray=new THREE.Raycaster();
-    ray.setFromCamera(new THREE.Vector2(0,0),camera);
-    const targets=zombies.concat(boss?[boss]:[]);
-    const allMeshes=[];
-    targets.forEach(t=>t.traverse(c=>{if(c.isMesh){c.userData._parent=t;allMeshes.push(c);}}));
-    const hits=ray.intersectObjects(allMeshes,false);
-    if(hits.length>0){
-        const hit=hits[0].object;
-        const enemy=hit.userData._parent||hit;
-        const dmg=activePowerup==='damage'?180:60;
-        enemy.userData.hp-=dmg;
-        updateHpBar(enemy);
-        spawnImpact(hits[0].point);
-        if(enemy.userData.hp<=0) killEnemy(enemy);
-    }
-}
-
-function spawnImpact(pos){
-    for(let i=0;i<6;i++){
-        const p=new THREE.Mesh(new THREE.SphereGeometry(0.09),new THREE.MeshBasicMaterial({color:0xff4400}));
-        p.position.copy(pos);
-        p.userData.v=new THREE.Vector3((Math.random()-0.5)*0.25,Math.random()*0.25,(Math.random()-0.5)*0.25);
-        particles.push(p); scene.add(p);
-        setTimeout(()=>{scene.remove(p);particles=particles.filter(x=>x!==p);},400);
-    }
-}
-
-function killEnemy(enemy){
-    for(let i=0;i<10;i++){
-        const p=new THREE.Mesh(new THREE.SphereGeometry(0.13),new THREE.MeshBasicMaterial({color:enemy.userData.type==='boss'?0xff00ff:0x44ff00}));
-        p.position.copy(enemy.position);
-        p.userData.v=new THREE.Vector3((Math.random()-0.5)*0.35,Math.random()*0.4,(Math.random()-0.5)*0.35);
-        particles.push(p); scene.add(p);
-        setTimeout(()=>{scene.remove(p);particles=particles.filter(x=>x!==p);},600);
-    }
-    scene.remove(enemy);
-    if(enemy===boss){
-        boss=null; wins++;
-        document.getElementById('boss-hp-wrap').style.display='none';
-        onWin();
-    } else {
-        zombies=zombies.filter(z=>z!==enemy);
-        killed++;
-    }
-    updateHUD();
-}
-
-// ===== RELOAD =====
-function reload(){
-    if(reloading||ammo===maxAmmo) return;
-    reloading=true; updateAmmoUI();
-    let t=0;
-    const anim=setInterval(()=>{
-        t++;
-        weaponGroup.rotation.x=Math.sin(t/8)*0.4;
-        if(t>18){clearInterval(anim);weaponGroup.rotation.x=0;ammo=maxAmmo;reloading=false;updateAmmoUI();}
-    },50);
-}
-
-// ===== PARRY =====
-function doParry(){
-    const now=Date.now();
-    if(now-lastParry<2000) return;
-    lastParry=now; parryActive=true;
-    hp=Math.min(100,hp+10); lastDamage=now-7000;
-    document.getElementById('parry-msg').style.display='block';
-    setTimeout(()=>{document.getElementById('parry-msg').style.display='none';parryActive=false;},700);
-    updateHUD();
-}
-
-// ===== SLIDE =====
-function doSlide(){
-    if(sliding) return;
-    sliding=true;
-    const dir=new THREE.Vector3();
-    camera.getWorldDirection(dir); dir.y=0; dir.normalize();
-    slideDir.copy(dir);
-    document.getElementById('slide-msg').style.display='block';
-    setTimeout(()=>{document.getElementById('slide-msg').style.display='none';sliding=false;},650);
-}
-
-// ===== COLLISION =====
-function resolveCollisions(){
-    const pp=controls.getObject().position;
-    buildings.forEach(b=>{
-        if(Math.abs(pp.x-b.x)<b.hw && Math.abs(pp.z-b.z)<b.hd){
-            const dx=pp.x-b.x, dz=pp.z-b.z;
-            const ox=b.hw-Math.abs(dx), oz=b.hd-Math.abs(dz);
-            if(ox<oz) pp.x+=dx>0?ox:-ox;
-            else pp.z+=dz>0?oz:-oz;
-        }
-    });
-    pp.y=2.0;
-}
-
-// ===== MOUVEMENT =====
-function updateMovement(delta){
-    if(sliding){
-        controls.getObject().position.addScaledVector(slideDir,22*delta);
-    } else {
-        const speed=(activePowerup==='speed'?18:9)*delta;
-        const sprint=(keys['ShiftLeft']||keys['ShiftRight'])?1.7:1;
-        if(keys['KeyW']) controls.moveForward(speed*sprint);
-        if(keys['KeyS']) controls.moveForward(-speed*sprint);
-        if(keys['KeyA']) controls.moveRight(-speed*sprint);
-        if(keys['KeyD']) controls.moveRight(speed*sprint);
-    }
-    resolveCollisions();
-}
-
-// ===== UPDATE ZOMBIES =====
-function updateZombies(){
-    const pp=controls.getObject().position;
-    const t=Date.now();
-    const all=zombies.concat(boss?[boss]:[]);
-    all.forEach(enemy=>{
-        const type=enemy.userData.type;
-        const dist=enemy.position.distanceTo(pp);
-        const dir=pp.clone().sub(enemy.position).normalize();
-
-        if(type==='flying'){
-            enemy.position.x+=dir.x*enemy.userData.speed;
-            enemy.position.z+=dir.z*enemy.userData.speed;
-            enemy.position.y=4+Math.sin(t*0.002+(enemy.userData.flyOffset||0))*1.5;
-            enemy.children.filter(c=>c.name==='wing').forEach((w,i)=>{
-                w.rotation.z=Math.sin(t*0.012)*(i===0?0.6:-0.6);
-            });
-        } else if(type==='mage'){
-            if(dist>18){ enemy.position.x+=dir.x*enemy.userData.speed; enemy.position.z+=dir.z*enemy.userData.speed; }
-            if(t-enemy.userData.lastAtk>enemy.userData.atkCool && dist<30){
-                launchSpell(enemy.position); enemy.userData.lastAtk=t;
-            }
-        } else if(type==='boss'){
-            enemy.position.x+=dir.x*enemy.userData.speed;
-            enemy.position.z+=dir.z*enemy.userData.speed;
-            enemy.rotation.y=t*0.003;
-            enemy.position.y=1.8+Math.sin(t*0.004)*0.4;
-            document.getElementById('boss-hp-bar').style.width=(Math.max(0,enemy.userData.hp/enemy.userData.maxHp)*100)+'%';
-        } else {
-            enemy.position.x+=dir.x*enemy.userData.speed;
-            enemy.position.z+=dir.z*enemy.userData.speed;
-            const w=Math.sin(t*0.008);
-            enemy.children.filter(c=>c.name==='leg').forEach((l,i)=>l.rotation.x=w*(i===0?.5:-.5));
-            enemy.children.filter(c=>c.name==='arm').forEach((a,i)=>a.rotation.x=w*(i===0?-.4:.4));
-        }
-
-        enemy.lookAt(pp.x,enemy.position.y,pp.z);
-        updateHpBar(enemy);
-
-        if(type!=='mage' && dist<enemy.userData.range){
-            if(t-enemy.userData.lastAtk>enemy.userData.atkCool){
-                if(activePowerup==='shield'){}
-                else if(parryActive){
-                    enemy.position.add(dir.clone().negate().multiplyScalar(4));
-                    if(type!=='boss'){enemy.userData.hp-=40;updateHpBar(enemy);if(enemy.userData.hp<=0)killEnemy(enemy);}
-                } else {
-                    dealDamage(enemy.userData.dmg);
+        // ÉTAT DU JEU
+        let gameState = {
+            player: {
+                name: "Luffy",
+                level: 1,
+                xp: 0,
+                hp: 100,
+                maxHP: 100,
+                attack: 10,
+                defense: 5,
+                speed: 10,
+                gold: 0,
+                devilFruit: null,
+                inventory: [],
+                equipment: {
+                    weapon: null,
+                    armor: null,
+                    accessory: null
                 }
-                enemy.userData.lastAtk=t;
+            },
+            currentIsland: 0,
+            currentEnemy: null,
+            inCombat: false,
+            log: []
+        };
+
+        // ÎLES (progression longue)
+        const islands = [
+            { name: "Île de Foosha", levelReq: 1, enemies: ["pirate_novice", "bandit"], boss: null },
+            { name: "Île de Shells Town", levelReq: 5, enemies: ["marine_recrue", "pirate_exp", "monstre_marin_petit"], boss: "axehand_morgan" },
+            { name: "Île d'Orange Town", levelReq: 12, enemies: ["pirate_buggy", "clown", "monstre_marin"], boss: "buggy_capitaine" },
+            { name: "Syrup Village", levelReq: 20, enemies: ["pirate_kuro", "chat_noir"], boss: "kuro" },
+            { name: "Baratie", levelReq: 30, enemies: ["pirate_don_krieg", "cuistot"], boss: "don_krieg" },
+            { name: "Arlong Park", levelReq: 45, enemies: ["poisson_homme", "arlong_pirate"], boss: "arlong" },
+            { name: "Loguetown", levelReq: 65, enemies: ["marine_capitaine", "dragon_pirate"], boss: "smoker" }
+        ];
+
+        // ENNEMIS (toujours plus forts)
+        const enemies = {
+            pirate_novice: { name: "Pirate novice", level: 1, hp: 50, maxHP: 50, attack: 8, defense: 2, speed: 8, gold: 5, xp: 10 },
+            bandit: { name: "Bandit", level: 2, hp: 70, maxHP: 70, attack: 12, defense: 4, speed: 10, gold: 8, xp: 15 },
+            marine_recrue: { name: "Marine recrue", level: 5, hp: 120, maxHP: 120, attack: 18, defense: 8, speed: 12, gold: 15, xp: 25 },
+            pirate_exp: { name: "Pirate expérimenté", level: 6, hp: 140, maxHP: 140, attack: 22, defense: 10, speed: 14, gold: 20, xp: 30 },
+            monstre_marin_petit: { name: "Petit monstre marin", level: 7, hp: 160, maxHP: 160, attack: 25, defense: 12, speed: 10, gold: 25, xp: 35 },
+            axehand_morgan: { name: "Axe-Hand Morgan", level: 10, hp: 500, maxHP: 500, attack: 40, defense: 20, speed: 15, gold: 200, xp: 500, boss: true },
+            clown: { name: "Clown de Buggy", level: 12, hp: 200, maxHP: 200, attack: 30, defense: 15, speed: 20, gold: 35, xp: 50 },
+            pirate_buggy: { name: "Pirate de Buggy", level: 13, hp: 220, maxHP: 220, attack: 35, defense: 18, speed: 22, gold: 40, xp: 60 },
+            monstre_marin: { name: "Monstre marin", level: 15, hp: 300, maxHP: 300, attack: 45, defense: 25, speed: 12, gold: 60, xp: 80 },
+            buggy_capitaine: { name: "Buggy le Clown ★BOSS★", level: 18, hp: 1200, maxHP: 1200, attack: 70, defense: 35, speed: 30, gold: 1000, xp: 2000, boss: true },
+            // Ajoutez plus d'ennemis ici pour progression infinie
+        };
+
+        // FRUITS DU DÉMON (hiérarchie stricte)
+        const devilFruits = {
+            s_tier: [
+                { name: "Hito Hito no Mi modèle Nika", power: 5, skill: "Gear 5", bonus: { attack: 3, hp: 2, speed: 2 }, transform: true },
+                { name: "Uo Uo no Mi modèle Seiryu", power: 4.8, skill: "Ragnarok", bonus: { attack: 4, hp: 1.5 }, transform: true },
+                { name: "Gura Gura no Mi", power: 4.5, skill: "Quake Fist", bonus: { attack: 4, defense: 1 }, transform: true },
+                { name: "Yami Yami no Mi", power: 4.2, skill: "Dark Vortex", bonus: { attack: 3.5, defense: 2 }, transform: true }
+            ],
+            a_tier: [
+                { name: "Mera Mera no Mi", power: 3.5, skill: "Fire Fist", bonus: { attack: 2.5 }, transform: true },
+                { name: "Goro Goro no Mi", power: 3.4, skill: "Lightning Bolt", bonus: { attack: 2.5, speed: 1.5 }, transform: true },
+                { name: "Tori Tori no Mi modèle Phoenix", power: 3.3, skill: "Phoenix Flame", bonus: { hp: 3 }, transform: true }
+            ],
+            b_tier: [
+                { name: "Ito Ito no Mi", power: 2.5, skill: "Strings Attack", bonus: { attack: 1.5, speed: 1 }, transform: true },
+                { name: "Doku Doku no Mi", power: 2.4, skill: "Poison Cloud", bonus: { attack: 2 } },
+                { name: "Hana Hana no Mi", power: 2.3, skill: "Bloom Strike", bonus: { attack: 1.5 } }
+            ],
+            c_tier: [
+                { name: "Baku Baku no Mi", power: 1.5, skill: "Eat Attack", bonus: { attack: 1 } },
+                { name: "Kilo Kilo no Mi", power: 1.2, skill: "Heavy Smash", bonus: { attack: 0.8 } },
+                { name: "Toge Toge no Mi", power: 1.0, skill: "Spike Barrage", bonus: { attack: 0.7 } }
+            ]
+        };
+
+        // OBJETS DE PÊCHE
+        const fishingLoot = {
+            common: [
+                { name: "Poisson banal", value: 1, type: "fish" },
+                { name: "Sardine", value: 2, type: "fish" },
+                { name: "Maquereau", value: 3, type: "fish" }
+            ],
+            rare: [
+                { name: "Thon rouge", value: 20, type: "fish" },
+                { name: "Espadon", value: 35, type: "fish" },
+                { name: "Trésor rouillé", value: 50, type: "treasure" },
+                { name: "Épée pirate +1 ATK", attack: 5, type: "weapon" }
+            ],
+            treasure: [
+                { name: "Sac d'or", gold: 100, type: "treasure" },
+                { name: "Armure légère +2 DEF", defense: 8, type: "armor" },
+                { name: "Bague de vitesse +3 SPD", speed: 10, type: "accessory" },
+                { name: "Épée d'officier +10 ATK", attack: 15, type: "weapon" }
+            ]
+        };
+
+        // INITIALISATION
+        function initGame() {
+            loadGame();
+            updateDisplay();
+            logMessage("🏴‍☠️ Bienvenue dans One Piece Incremental RPG ! Cherchez des ennemis et pêchez pour progresser.", "info");
+            setInterval(autoSave, 30000); // Sauvegarde auto toutes les 30s
+        }
+
+        // MISE À JOUR AFFICHAGE
+        function updateDisplay() {
+            // Stats joueur
+            document.getElementById('playerLevel').textContent = gameState.player.level;
+            document.getElementById('playerXP').textContent = gameState.player.xp;
+            document.getElementById('xpToNext').textContent = getXpToNextLevel();
+            document.getElementById('playerHP').textContent = gameState.player.hp;
+            document.getElementById('playerMaxHP').textContent = gameState.player.maxHP;
+            document.getElementById('playerAttack').textContent = getTotalAttack();
+            document.getElementById('playerDefense').textContent = getTotalDefense();
+            document.getElementById('playerSpeed').textContent = getTotalSpeed();
+            document.getElementById('playerGold').textContent = gameState.player.gold;
+            document.getElementById('playerName').textContent = gameState.player.name;
+
+            // Barres
+            const xpPercent = (gameState.player.xp / getXpToNextLevel()) * 100;
+            document.getElementById('xpBar').style.width = Math.min(xpPercent, 100) + '%';
+            const hpPercent = (gameState.player.hp / gameState.player.maxHP) * 100;
+            document.getElementById('hpBar').style.width = hpPercent + '%';
+
+            // Île actuelle
+            const island = islands[gameState.currentIsland];
+            document.getElementById('islandDisplay').innerHTML = 
+                `${island.name} - Niv. recommandé: ${island.levelReq}-${island.levelReq + 10}`;
+
+            // Fruit du démon
+            const fruitDiv = document.getElementById('fruitDisplay');
+            if (gameState.player.devilFruit) {
+                fruitDiv.style.display = 'block';
+                fruitDiv.innerHTML = `🍎 ${gameState.player.devilFruit.name}<br>
+                    Puissance: S${gameState.player.devilFruit.power.toFixed(1)} | ${gameState.player.devilFruit.skill}`;
+            } else {
+                fruitDiv.style.display = 'none';
+            }
+
+            // Combat
+            if (gameState.inCombat && gameState.currentEnemy) {
+                document.getElementById('enemyDisplay').style.display = 'block';
+                document.getElementById('enemyName').textContent = gameState.currentEnemy.name;
+                document.getElementById('enemyHP').textContent = gameState.currentEnemy.hp;
+                document.getElementById('enemyMaxHP').textContent = gameState.currentEnemy.maxHP;
+                document.getElementById('enemyLevel').textContent = gameState.currentEnemy.level;
+                
+                const enemyHpPercent = (gameState.currentEnemy.hp / gameState.currentEnemy.maxHP) * 100;
+                document.getElementById('enemyHPBar').style.width = enemyHpPercent + '%';
+                
+                document.getElementById('combatButtons').style.display = 'block';
+                document.getElementById('findEnemyBtn').style.display = 'none';
+            } else {
+                document.getElementById('enemyDisplay').style.display = 'none';
+                document.getElementById('combatButtons').style.display = 'none';
+                document.getElementById('findEnemyBtn').style.display = 'block';
+            }
+
+            // Skill disponible si fruit ou niveau suffisant
+            document.getElementById('skillBtn').disabled = !gameState.player.devilFruit && gameState.player.level < 5;
+
+            // Équipement
+            document.getElementById('equipWeapon').textContent = gameState.player.equipment.weapon?.name || '-';
+            document.getElementById('equipArmor').textContent = gameState.player.equipment.armor?.name || '-';
+            document.getElementById('equipAccessory').textContent = gameState.player.equipment.accessory?.name || '-';
+
+            // Inventaire
+            updateInventoryDisplay();
+        }
+
+        // INVENTAIRE
+        function updateInventoryDisplay() {
+            const grid = document.getElementById('inventoryGrid');
+            grid.innerHTML = '';
+            
+            gameState.player.inventory.slice(0, 20).forEach((item, index) => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'item';
+                itemDiv.innerHTML = `${item.emoji || '📦'}<br>${item.name}<br>${item.value || item.attack || ''}`;
+                itemDiv.onclick = () => equipItem(index);
+                grid.appendChild(itemDiv);
+            });
+        }
+
+        // COMBAT
+        function findEnemy() {
+            const island = islands[gameState.currentIsland];
+            if (gameState.player.level < island.levelReq - 3) {
+                logMessage("❌ Trop faible pour cette île ! Montez de niveau.", "info");
+                return;
+            }
+
+            const enemyKeys = island.boss ? [island.boss] : island.enemies;
+            const enemyKey = enemyKeys[Math.floor(Math.random() * enemyKeys.length)];
+            gameState.currentEnemy = { ...enemies[enemyKey] };
+            gameState.inCombat = true;
+            
+            logMessage(`⚔️ Un ${gameState.currentEnemy.name} (Niv. ${gameState.currentEnemy.level}) apparaît !`, "combat");
+            updateDisplay();
+        }
+
+        function playerAction(action) {
+            if (!gameState.inCombat) return;
+
+            // Tour joueur
+            let damage = 0;
+            if (action === 'attack') {
+                damage = Math.max(1, getTotalAttack() - gameState.currentEnemy.defense + Math.floor(Math.random() * 5));
+                gameState.currentEnemy.hp -= damage;
+                logMessage(`Vous infligez ${damage} dégâts !`, "combat");
+            } else if (action === 'skill' && gameState.player.devilFruit) {
+                const fruit = gameState.player.devilFruit;
+                damage = getTotalAttack() * fruit.power + 20;
+                gameState.currentEnemy.hp -= damage;
+                logMessage(`🍎 ${fruit.skill} ! ${damage} dégâts dévastateurs !`, "combat");
+            } else if (action === 'item') {
+                logMessage("📦 Pas d'objets utilisables en combat.", "info");
+                return;
+            } else if (action === 'flee') {
+                if (Math.random() < 0.7) {
+                    logMessage("🏃 Vous fuyez le combat !", "info");
+                    endCombat(false);
+                    return;
+                } else {
+                    logMessage("❌ Impossible de fuir !", "combat");
+                }
+            }
+
+            // Vérif mort ennemi
+            if (gameState.currentEnemy.hp <= 0) {
+                logMessage(`💀 ${gameState.currentEnemy.name} est vaincu ! +${gameState.currentEnemy.xp} XP, +${gameState.currentEnemy.gold} or`, "combat");
+                gainXP(gameState.currentEnemy.xp);
+                gameState.player.gold += gameState.currentEnemy.gold;
+                if (Math.random() < 0.1) { // 10% drop objet
+                    const loot = fishingLoot.rare[Math.floor(Math.random() * fishingLoot.rare.length)];
+                    gameState.player.inventory.push({ ...loot, emoji: '⚔️' });
+                    logMessage(`🎁 ${loot.name} obtenu !`, "loot");
+                }
+                endCombat(true);
+                return;
+            }
+
+            // Tour ennemi
+            setTimeout(() => {
+                const enemyDamage = Math.max(1, gameState.currentEnemy.attack - getTotalDefense() + Math.floor(Math.random() * 8));
+                gameState.player.hp -= enemyDamage;
+                logMessage(`${gameState.currentEnemy.name} vous inflige ${enemyDamage} dégâts !`, "combat");
+
+                if (gameState.player.hp <= 0) {
+                    logMessage("💀 Vous êtes K.O. ! Retour à l'île précédente.", "combat");
+                    gameState.player.hp = gameState.player.maxHP * 0.5;
+                    gameState.currentIsland = Math.max(0, gameState.currentIsland - 1);
+                    endCombat(false);
+                    return;
+                }
+                updateDisplay();
+            }, 800);
+        }
+
+        function endCombat(victory) {
+            gameState.inCombat = false;
+            gameState.currentEnemy = null;
+            updateDisplay();
+        }
+
+        // PÊCHE (mécanique centrale)
+        function fish() {
+            // Cooldown visuel
+            const btn = document.querySelector('.fishing-btn');
+            const originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '⏳ Pêche en cours...';
+
+            setTimeout(() => {
+                let loot;
+                const rand = Math.random();
+                
+                if (rand < 0.60) { // 60% commun
+                    loot = fishingLoot.common[Math.floor(Math.random() * fishingLoot.common.length)];
+                    gameState.player.gold += loot.value;
+                    logMessage(`🐟 ${loot.name} (+${loot.value} or)`, "loot");
+                } else if (rand < 0.85) { // 25% rare
+                    loot = fishingLoot.rare[Math.floor(Math.random() * fishingLoot.rare.length)];
+                    if (loot.gold) gameState.player.gold += loot.gold;
+                    else gameState.player.inventory.push({ ...loot, emoji: loot.type === 'weapon' ? '⚔️' : '💎' });
+                    logMessage(`✨ ${loot.name} obtenu !`, "loot");
+                } else if (rand < 0.95) { // 10% trésor
+                    loot = fishingLoot.treasure[Math.floor(Math.random() * fishingLoot.treasure.length)];
+                    if (loot.gold) gameState.player.gold += loot.gold;
+                    else gameState.player.inventory.push({ ...loot, emoji: '⭐' });
+                    logMessage(`💰 TRÉSOR: ${loot.name} !`, "loot");
+                } else { // 5% fruit du démon
+                    const tiers = ['s_tier', 'a_tier', 'b_tier', 'c_tier'];
+                    const tier = tiers[Math.floor(Math.random() * tiers.length)];
+                    loot = devilFruits[tier][Math.floor(Math.random() * devilFruits[tier].length)];
+                    gameState.player.devilFruit = loot;
+                    applyDevilFruitBonuses(loot);
+                    logMessage(`🍎 FRUIT DU DÉMON: ${loot.name} (Tier ${tier.toUpperCase().replace('_', '')}) ! INCROYABLE !`, "loot");
+                }
+
+                // Limite inventaire
+                if (gameState.player.inventory.length > 20) {
+                    gameState.player.inventory.shift();
+                }
+
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                updateDisplay();
+            }, 1000);
+        }
+
+        // ÉQUIPEMENT
+        function equipItem(index) {
+            if (index >= gameState.player.inventory.length) return;
+            
+            const item = gameState.player.inventory[index];
+            if (!item) return;
+
+            // Équipe selon type
+            if (item.attack || item.type === 'weapon') {
+                if (gameState.player.equipment.weapon) {
+                    gameState.player.inventory.push(gameState.player.equipment.weapon);
+                }
+                gameState.player.equipment.weapon = item;
+            } else if (item.defense || item.type === 'armor') {
+                if (gameState.player.equipment.armor) {
+                    gameState.player.inventory.push(gameState.player.equipment.armor);
+                }
+                gameState.player.equipment.armor = item;
+            } else if (item.speed || item.type === 'accessory') {
+                if (gameState.player.equipment.accessory) {
+                    gameState.player.inventory.push(gameState.player.equipment.accessory);
+                }
+                gameState.player.equipment.accessory = item;
+            }
+
+            gameState.player.inventory.splice(index, 1);
+            updateDisplay();
+        }
+
+        // SYSTÈME XP PROGRESSIF
+        function gainXP(amount) {
+            gameState.player.xp += amount;
+            while (gameState.player.xp >= getXpToNextLevel()) {
+                levelUp();
             }
         }
-    });
-}
 
-function updateSpells(){
-    const pp=controls.getObject().position;
-    for(let i=spells.length-1;i>=0;i--){
-        const s=spells[i];
-        s.position.add(s.userData.vel);
-        if(s.position.distanceTo(pp)<1.3){
-            if(activePowerup!=='shield'&&!parryActive) dealDamage(18);
-            scene.remove(s); spells.splice(i,1);
-        } else if(Date.now()-s.userData.born>4000){
-            scene.remove(s); spells.splice(i,1);
+        function getXpToNextLevel() {
+            return Math.floor(100 * Math.pow(1.4, gameState.player.level - 1));
         }
-    }
-}
 
-function dealDamage(dmg){
-    hp-=dmg; lastDamage=Date.now();
-    document.getElementById('hit-flash').style.background='rgba(255,0,0,0.5)';
-    setTimeout(()=>document.getElementById('hit-flash').style.background='transparent',150);
-    if(hp<=0) onDie();
-    updateHUD();
-}
-
-function updatePowerups(){
-    const pp=controls.getObject().position;
-    const now=Date.now();
-    if(activePowerup&&now>powerupEnd){activePowerup=null;document.getElementById('powerup-msg').style.display='none';}
-    for(let i=powerupsObjs.length-1;i>=0;i--){
-        const pu=powerupsObjs[i];
-        pu.rotation.y+=0.05; pu.rotation.x+=0.025;
-        pu.position.y=0.8+Math.sin(now*0.003+i)*0.3;
-        if(pu.position.distanceTo(pp)<2.5){
-            const t=pu.userData.type;
-            if(t==='health') hp=Math.min(100,hp+40);
-            else {activePowerup=t;powerupEnd=now+(t==='regen'?12000:8000);}
-            scene.remove(pu); powerupsObjs.splice(i,1);
-            const msg=document.getElementById('powerup-msg');
-            msg.textContent=pu.userData.label;
-            msg.style.color='#'+new THREE.Color(pu.userData.color).getHexString();
-            msg.style.display='block';
-            setTimeout(()=>msg.style.display='none',2500);
-            updateHUD();
+        function levelUp() {
+            gameState.player.level++;
+            gameState.player.xp -= getXpToNextLevel();
+            gameState.player.maxHP += 20 + Math.floor(gameState.player.level / 2);
+            gameState.player.hp = gameState.player.maxHP;
+            gameState.player.attack += 3;
+            gameState.player.defense += 1;
+            gameState.player.speed += 2;
+            logMessage(`🎉 NIVEAU ${gameState.player.level} ! Stats augmentées !`, "info");
         }
-    }
-}
 
-function updateRegen(){
-    if(Date.now()-lastDamage>7000){ hp=Math.min(100,hp+(activePowerup==='regen'?0.4:0.15)); updateHUD(); }
-}
-
-function updateWeaponBob(){
-    const moving=keys['KeyW']||keys['KeyS']||keys['KeyA']||keys['KeyD'];
-    if(moving&&!sliding){
-        weaponGroup.position.y=-0.2+Math.sin(Date.now()*0.009)*0.012;
-        weaponGroup.rotation.z=Math.sin(Date.now()*0.009)*0.025;
-    } else {
-        weaponGroup.position.y+=(-0.2-weaponGroup.position.y)*0.12;
-        weaponGroup.rotation.z*=0.88;
-    }
-}
-
-function updateParticles(){
-    particles.forEach(p=>{p.position.add(p.userData.v);p.userData.v.y-=0.018;});
-}
-
-let waveInProgress = false;
-let zombiesThisWave = 0;
-let zombiesSpawnedThisWave = 0;
-
-function startWave(n) {
-    waveInProgress = true;
-    zombiesThisWave = 8 + n * 6;      // Nb zombies par wave
-    zombiesSpawnedThisWave = 0;
-    showWaveAlert(`🌊 WAVE ${n} !`, '#ff4400');
-    // Spawn progressif
-    const interval = setInterval(() => {
-        if (zombiesSpawnedThisWave >= zombiesThisWave) { clearInterval(interval); return; }
-        spawnZombie();
-        zombiesSpawnedThisWave++;
-    }, 800); // 1 zombie toutes les 0.8s
-}
-
-function checkWave() {
-    // Boss wave 8+
-    if (wave >= 8 && !boss && zombies.length === 0 && !waveInProgress) {
-        spawnBoss(); return;
-    }
-    // Wave terminée = tous les zombies morts
-    if (waveInProgress && zombiesSpawnedThisWave >= zombiesThisWave && zombies.length === 0 && !boss) {
-        waveInProgress = false;
-        wave++;
-        killed = 0; // Reset compteur par wave
-        setTimeout(() => startWave(wave), 3000); // 3s de pause entre waves
-    }
-    // Spawn progressif en cours
-}
-
-function onWin(){
-    showWaveAlert('🏆 BOSS VAINCU ! +1 WIN','#ffd700');
-    saveScore();
-    setTimeout(()=>{wave++;for(let i=0;i<wave*3;i++) spawnZombie();showWaveAlert(`💀 WAVE ${wave} — PLUS FORT !`,'#ff4400');},5000);
-}
-
-function onDie(){
-    hp=0; updateHUD(); locked=false; document.exitPointerLock(); saveScore();
-    setTimeout(()=>{
-        if(confirm(`💀 MORT !\nZombies: ${killed} | Wins: ${wins} | Wave: ${wave}\n\nRecommencer ?`)){
-            hp=100;killed=0;wins=0;wave=1;
-            zombies.forEach(z=>scene.remove(z)); zombies=[];
-            spells.forEach(s=>scene.remove(s)); spells=[];
-            if(boss){scene.remove(boss);boss=null;}
-            document.getElementById('boss-hp-wrap').style.display='none';
-            spawnInitialZombies(); updateHUD(); updateAmmoUI();
-            renderer.domElement.requestPointerLock();
+        // STATS TOTALES (avec équipement + fruit)
+        function getTotalAttack() {
+            let total = gameState.player.attack;
+            if (gameState.player.equipment.weapon) total += gameState.player.equipment.weapon.attack || 0;
+            if (gameState.player.devilFruit) total += gameState.player.devilFruit.bonus.attack * 10 || 0;
+            return Math.floor(total);
         }
-    },300);
-}
 
-function showWaveAlert(text,color){
-    const el=document.getElementById('wave-alert');
-    el.textContent=text; el.style.color=color; el.style.display='block';
-    setTimeout(()=>el.style.display='none',3000);
-}
+        function getTotalDefense() {
+            let total = gameState.player.defense;
+            if (gameState.player.equipment.armor) total += gameState.player.equipment.armor.defense || 0;
+            if (gameState.player.devilFruit) total += gameState.player.devilFruit.bonus.defense * 5 || 0;
+            return Math.floor(total);
+        }
 
-function updateHUD(){
-    hp=Math.max(0,hp);
-    document.getElementById('healthbar').style.width=Math.floor(hp)+'%';
-    document.getElementById('healthbar').style.background=hp>60?'#00ff44':hp>30?'#ff8800':'#ff2200';
-    document.getElementById('stats-top').textContent=
-        `💀 ${killed} zombies | 🏆 ${wins} wins | 🌊 Wave ${wave}`+
-        (activePowerup?` | ⚡ ${activePowerup.toUpperCase()}`:'')+(boss?' | 🐶 BOSS':'');
-}
+        function getTotalSpeed() {
+            let total = gameState.player.speed;
+            if (gameState.player.equipment.accessory) total += gameState.player.equipment.accessory.speed || 0;
+            if (gameState.player.devilFruit) total += gameState.player.devilFruit.bonus.speed * 5 || 0;
+            return Math.floor(total);
+        }
 
-function updateAmmoUI(){
-    document.getElementById('ammo').textContent=reloading?'🔄 RECHARGEMENT...':`🔫 ${ammo} / ${maxAmmo}`;
-}
+        function applyDevilFruitBonuses(fruit) {
+            if (fruit.bonus.hp) gameState.player.maxHP += fruit.bonus.hp * 50;
+            if (fruit.bonus.attack) gameState.player.attack += fruit.bonus.attack * 10;
+            if (fruit.bonus.defense) gameState.player.defense += fruit.bonus.defense * 5;
+            if (fruit.bonus.speed) gameState.player.speed += fruit.bonus.speed * 5;
+            gameState.player.hp = gameState.player.maxHP;
+        }
 
-// ===== LOOP =====
-function animate(now=0){
-    requestAnimationFrame(animate);
-    const delta=Math.min((now-lastTime)/1000,0.05);
-    lastTime=now;
-    if(locked&&!paused){
-        updateMovement(delta);
-        updateZombies();
-        updateSpells();
-        updatePowerups();
-        updateRegen();
-        updateWeaponBob();
-        updateParticles();
-        checkWave();
-    }
-    renderer.render(scene,camera);
-}
+        // JOURNAL
+        function logMessage(message, type = "info") {
+            gameState.log.unshift({ message, type, time: Date.now() });
+            gameState.log = gameState.log.slice(0, 50); // Garde 50 dernières
 
-// ===== JSONBIN =====
-async function apiCall(url,options={}){
-    try{
-        const res=await fetch(url,{...options,headers:{'Content-Type':'application/json','X-Master-Key':SECRET_KEY}});
-        return await res.json();
-    }catch(e){return{record:[]};}
-}
-async function loadLeaderboard(){
-    const data=await apiCall(`${BASE_URL}/latest`,{method:'GET'});
-    const lb=Array.isArray(data.record)?data.record:[];
-    document.getElementById('lb-content').innerHTML=lb
-        .sort((a,b)=>b.wins-a.wins||b.killed-a.killed).slice(0,10)
-        .map((e,i)=>`<div style="padding:4px 0;border-bottom:1px solid #222;font-size:13px;">
-            <b>${['🥇','🥈','🥉'][i]||(i+1)+'.'} ${e.username}</b><br>
-            🏆${e.wins} wins · 💀${e.killed}
-        </div>`).join('')||'<em style="color:#555">Personne encore !</em>';
-}
-async function saveScore(){
-    const data=await apiCall(`${BASE_URL}/latest`,{method:'GET'});
-    const lb=Array.isArray(data.record)?data.record:[];
-    const idx=lb.findIndex(e=>e.username===username);
-    const entry={username,wins,killed};
-    if(idx>-1){if(wins>lb[idx].wins||(wins===lb[idx].wins&&killed>lb[idx].killed))lb[idx]=entry;}
-    else lb.push(entry);
-    lb.sort((a,b)=>b.wins-a.wins||b.killed-a.killed).splice(100);
-    await apiCall(BASE_URL,{method:'PUT',body:JSON.stringify(lb)});
-    loadLeaderboard();
-}
+            const logDiv = document.getElementById('combatLog');
+            const entry = document.createElement('div');
+            entry.className = `log-entry log-${type}`;
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logDiv.insertBefore(entry, logDiv.firstChild);
+            
+            // Scroll auto
+            logDiv.scrollTop = 0;
+        }
 
-init();
-</script>
+        // SAUVEGARDE (DOUBLE SYSTÈME)
+        function autoSave() {
+            localStorage.setItem('onePieceIncrementalSave', JSON.stringify(gameState));
+        }
+
+        function loadGame() {
+            const saved = localStorage.getItem('onePieceIncrementalSave');
+            if (saved) {
+                gameState = JSON.parse(saved);
+                logMessage("💾 Sauvegarde chargée !", "info");
+            }
+        }
+
+        function exportSave() {
+            const dataStr = JSON.stringify(gameState, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `onepiece_save_${new Date().toISOString().slice(0,10)}.json`;
+            link.click();
+        }
+
+        document.getElementById('importFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        gameState = JSON.parse(e.target.result);
+                        updateDisplay();
+                        logMessage("💾 Sauvegarde importée avec succès !", "info");
+                    } catch (err) {
+                        alert("Erreur de sauvegarde !");
+                    }
+                };
+                reader.readAsText(file);
+            }
+        });
+
+        function resetSave() {
+            if (confirm("Vraiment réinitialiser ? Progression PERDUE !")) {
+                localStorage.removeItem('onePieceIncrementalSave');
+                location.reload();
+            }
+        }
+
+        // NAVIGATION ÎLES (via boutons dans header)
+        document.addEventListener('DOMContentLoaded', function() {
+            // Ajout boutons îles dynamiques
+            const header = document.querySelector('.header');
+            const islandNav = document.createElement('div');
+            islandNav.style.marginTop = '10px';
+            islandNav.innerHTML = '<h3>🏝️ Îles:</h3>';
+            islands.forEach((island, index) => {
+                const btn = document.createElement('button');
+                btn.style.width = 'auto';
+                btn.style.margin = '2px';
+                btn.style.padding = '5px 10px';
+                btn.style.fontSize = '0.8em';
+                btn.textContent = island.name;
+                btn.onclick = () => travelToIsland(index);
+                islandNav.appendChild(btn);
+            });
+            header.appendChild(islandNav);
+        });
+
+        function travelToIsland(index) {
+            const island = islands[index];
+            if (gameState.player.level < island.levelReq) {
+                logMessage(`❌ Niveau ${island.levelReq} requis pour ${island.name} !`, "info");
+                return;
+            }
+            gameState.currentIsland = index;
+            logMessage(`⛵ Arrivée sur ${island.name}`, "info");
+            updateDisplay();
+        }
+
+        // DEMARRAGE
+        initGame();
+        updateDisplay();
+    </script>
 </body>
 </html>
-
